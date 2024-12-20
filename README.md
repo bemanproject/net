@@ -1,7 +1,9 @@
 # beman.net29: Senders For Network Operations
 
+<img src="https://github.com/bemanproject/beman/blob/main/images/logos/beman_logo-beman_library_under_development.png" style="width:5%; height:auto;">
+
 `beman.net29` provides senders for asynchronous network operations.
-It is based on [P2762](http://wg21.link/p2762). Both the proposal
+It is based on [P2762R2](https://wg21.link/P2762R2). Both the proposal
 and the implementation are in an early state although basic
 functionality is provided.
 
@@ -12,6 +14,10 @@ on `poll(2)`. Implementations using `kqueue(2)`, `epoll(2)`,
 `io_uring`, and IOCP hopefully follow soon. It should also be
 possible use various libraries for asynchronous operations like
 `libevent`, `libuv`, etc.
+
+**Implements**: [Sender/Receiver Interface for Networking (P2762R2)](https://wg21.link/P2762R2)
+
+**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/BEMAN_LIBRARY_MATURITY_MODEL.md#under-development-and-not-yet-ready-for-production-use)
 
 ## Help Welcome!
 
