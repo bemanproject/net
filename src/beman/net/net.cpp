@@ -3,7 +3,6 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net
-{
-    int version{000};
+namespace beman::net {
+int version{000};
 }

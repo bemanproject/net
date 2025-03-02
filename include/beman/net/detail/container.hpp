@@ -11,21 +11,20 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net::detail
-{
-    template <typename> class container;
+namespace beman::net::detail {
+template <typename>
+class container;
 }
 
 // ----------------------------------------------------------------------------
 
 template <typename Record>
-class beman::net::detail::container
-{
-private:
+class beman::net::detail::container {
+  private:
     ::std::vector<::std::variant<::std::size_t, Record>> records;
     ::std::size_t                                        free{};
 
-public:
+  public:
     auto insert(Record r) -> ::beman::net::detail::socket_id;
     auto erase(::beman::net::detail::socket_id id) -> void;
     auto operator[](::beman::net::detail::socket_id id) -> Record&;
@@ -34,15 +33,11 @@ public:
 // ----------------------------------------------------------------------------
 
 template <typename Record>
-inline auto beman::net::detail::container<Record>::insert(Record r) -> ::beman::net::detail::socket_id
-{
-    if (this->free == this->records.size())
-    {
+inline auto beman::net::detail::container<Record>::insert(Record r) -> ::beman::net::detail::socket_id {
+    if (this->free == this->records.size()) {
         this->records.emplace_back(::std::move(r));
         return ::beman::net::detail::socket_id(this->free++);
-    }
-    else
-    {
+    } else {
         ::std::size_t rc(std::exchange(this->free, ::std::get<0>(this->records[this->free])));
         this->records[rc] = ::std::move(r);
         return ::beman::net::detail::socket_id(rc);
@@ -50,14 +45,12 @@ inline auto beman::net::detail::container<Record>::insert(Record r) -> ::beman::
 }
 
 template <typename Record>
-inline auto beman::net::detail::container<Record>::erase(::beman::net::detail::socket_id id) -> void
-{
+inline auto beman::net::detail::container<Record>::erase(::beman::net::detail::socket_id id) -> void {
     this->records[::std::size_t(id)] = std::exchange(this->free, ::std::size_t(id));
 }
 
 template <typename Record>
-inline auto beman::net::detail::container<Record>::operator[](::beman::net::detail::socket_id id) -> Record&
-{
+inline auto beman::net::detail::container<Record>::operator[](::beman::net::detail::socket_id id) -> Record& {
     assert(this->records[::std::size_t(id)].index() == 1u);
     return ::std::get<1>(this->records[::std::size_t(id)]);
 }

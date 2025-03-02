@@ -12,65 +12,48 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net::detail
-{
-    class io_context_scheduler;
+namespace beman::net::detail {
+class io_context_scheduler;
 }
 
 // ----------------------------------------------------------------------------
 
-class beman::net::detail::io_context_scheduler
-{
-private:
+class beman::net::detail::io_context_scheduler {
+  private:
     ::beman::net::detail::context_base* d_context;
 
-public:
+  public:
     using scheduler_concept = ::beman::net::detail::ex::scheduler_t;
 
-    struct env
-    {
+    struct env {
         ::beman::net::detail::context_base* d_context;
 
         template <typename Signal>
-        auto query(::beman::net::detail::ex::get_completion_scheduler_t<Signal> const&) const noexcept
-            -> io_context_scheduler
-        {
+        auto query(const ::beman::net::detail::ex::get_completion_scheduler_t<Signal>&) const noexcept
+            -> io_context_scheduler {
             return this->d_context;
         }
     };
-    struct sender
-    {
+    struct sender {
         template <typename Receiver>
-        struct state
-            : ::beman::net::detail::context_base::task
-        {
+        struct state : ::beman::net::detail::context_base::task {
             using operation_state_concept = ::beman::net::detail::ex::operation_state_t;
 
-            ::std::remove_cvref_t<Receiver>       d_receiver;
+            ::std::remove_cvref_t<Receiver>     d_receiver;
             ::beman::net::detail::context_base* d_context;
 
             state(Receiver&& receiver, ::beman::net::detail::context_base* context)
-                : d_receiver(::std::forward<Receiver>(receiver))
-                , d_context(context)
-            {
-            }
+                : d_receiver(::std::forward<Receiver>(receiver)), d_context(context) {}
 
-            auto start() & noexcept -> void
-            {
-                this->d_context->schedule(this);
-            }
-            auto complete() -> void override
-            {
-                ::beman::net::detail::ex::set_value(::std::move(this->d_receiver));
-            }
+            auto start() & noexcept -> void { this->d_context->schedule(this); }
+            auto complete() -> void override { ::beman::net::detail::ex::set_value(::std::move(this->d_receiver)); }
         };
 
         using sender_concept = ::beman::net::detail::ex::sender_t;
         ::beman::net::detail::context_base* d_context;
 
         template <typename Receiver>
-        auto connect(Receiver&& receiver) -> state<Receiver>
-        {
+        auto connect(Receiver&& receiver) -> state<Receiver> {
             return {::std::forward<Receiver>(receiver), this->d_context};
         }
 
@@ -78,53 +61,35 @@ public:
     };
 
     auto schedule() noexcept -> sender { return {this->d_context}; }
-    auto operator== (io_context_scheduler const&) const -> bool = default;
+    auto operator==(const io_context_scheduler&) const -> bool = default;
 
-    io_context_scheduler(::beman::net::detail::context_base* context)
-        : d_context(context)
-    {
-        assert(this->d_context);
-    }
+    io_context_scheduler(::beman::net::detail::context_base* context) : d_context(context) { assert(this->d_context); }
 
     auto get_context() const { return this->d_context; }
 
-    auto cancel(beman::net::detail::io_base* cancel_op, beman::net::detail::io_base* op) -> void
-    {
+    auto cancel(beman::net::detail::io_base* cancel_op, beman::net::detail::io_base* op) -> void {
         this->d_context->cancel(cancel_op, op);
     }
-    auto accept(::beman::net::detail::context_base::accept_operation* op)
-        -> ::beman::net::detail::submit_result
-    {
+    auto accept(::beman::net::detail::context_base::accept_operation* op) -> ::beman::net::detail::submit_result {
         return this->d_context->accept(op);
     }
-    auto connect(::beman::net::detail::context_base::connect_operation* op)
-        -> ::beman::net::detail::submit_result
-    {
+    auto connect(::beman::net::detail::context_base::connect_operation* op) -> ::beman::net::detail::submit_result {
         return this->d_context->connect(op);
     }
-    auto receive(::beman::net::detail::context_base::receive_operation* op)
-        -> ::beman::net::detail::submit_result
-    {
+    auto receive(::beman::net::detail::context_base::receive_operation* op) -> ::beman::net::detail::submit_result {
         return this->d_context->receive(op);
     }
-    auto send(::beman::net::detail::context_base::send_operation* op)
-        -> ::beman::net::detail::submit_result
-    {
+    auto send(::beman::net::detail::context_base::send_operation* op) -> ::beman::net::detail::submit_result {
         return this->d_context->send(op);
     }
     auto resume_at(::beman::net::detail::context_base::resume_at_operation* op)
-        -> ::beman::net::detail::submit_result
-    {
+        -> ::beman::net::detail::submit_result {
         return this->d_context->resume_at(op);
     }
 };
 
-static_assert(::beman::net::detail::ex::sender<
-    beman::net::detail::io_context_scheduler::sender
-    >);
-static_assert(::beman::net::detail::ex::scheduler<
-    beman::net::detail::io_context_scheduler
-    >);
+static_assert(::beman::net::detail::ex::sender<beman::net::detail::io_context_scheduler::sender>);
+static_assert(::beman::net::detail::ex::scheduler<beman::net::detail::io_context_scheduler>);
 
 // ----------------------------------------------------------------------------
 

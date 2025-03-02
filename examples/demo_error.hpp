@@ -9,26 +9,18 @@
 
 // ----------------------------------------------------------------------------
 
-namespace demo
-{
-    inline constexpr int timeout{1};
+namespace demo {
+inline constexpr int timeout{1};
 
-    inline auto category() -> std::error_category const&
-    {
-        struct category
-            : std::error_category
-        {
-            auto name() const noexcept -> char const* override {
-                return "demo-category";
-            }
-            auto message(int c) const noexcept -> std::string override {
-                return c == 1? "timeout": "unknown";
-            }
-        };
-        static category rc{};
-        return rc;
-    }
+inline auto category() -> const std::error_category& {
+    struct category : std::error_category {
+        auto name() const noexcept -> const char* override { return "demo-category"; }
+        auto message(int c) const noexcept -> std::string override { return c == 1 ? "timeout" : "unknown"; }
+    };
+    static category rc{};
+    return rc;
 }
+} // namespace demo
 
 // ----------------------------------------------------------------------------
 

@@ -26,7 +26,4 @@ std::unordered_map<std::string, std::string> files{
     {"/logo.png", "examples/data/logo.png"},
 };
 
-auto main() -> int
-{
-    std::cout << "hello, world\n";
-}
+auto main() -> int { std::cout << "hello, world\n"; }

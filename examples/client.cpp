@@ -13,12 +13,13 @@ namespace net = ::beman::net;
 
 // ----------------------------------------------------------------------------
 
-namespace { auto use(auto&&...) -> void {} }
+namespace {
+auto use(auto&&...) -> void {}
+} // namespace
 
-auto main() -> int
-{
+auto main() -> int {
     using namespace std::chrono_literals;
-    using on_exit = std::unique_ptr<char const, decltype([](auto m){ std::cout << m << "\n";})>;
+    using on_exit = std::unique_ptr<const char, decltype([](auto m) { std::cout << m << "\n"; })>;
     net::io_context context;
     demo::scope     scope;
 
@@ -34,13 +35,10 @@ auto main() -> int
                 //| ex::upon_stopped([]{ std::cout << "5s timer got cancelled\n"; })
     );
 
-    auto stop = [&scope, &context]{
-        scope.spawn(
-            ex::schedule(context.get_scheduler())
-            | ex::then([]{ std::cout << "sending stop\n"; })
-            | ex::then([&scope]{ scope.stop(); })
-            | ex::then([]{ std::cout << "task sending stop signal\n"; })
-        );
+    auto stop = [&scope, &context] {
+        scope.spawn(ex::schedule(context.get_scheduler()) | ex::then([] { std::cout << "sending stop\n"; }) |
+                    ex::then([&scope] { scope.stop(); }) |
+                    ex::then([] { std::cout << "task sending stop signal\n"; }));
     };
 
     scope.spawn(std::invoke(

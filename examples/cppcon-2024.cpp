@@ -26,22 +26,19 @@ std::unordered_map<std::string, std::string> files{
     {"/logo.png", "examples/data/logo.png"},
 };
 
-auto process(auto& stream, auto const& request) -> demo::task<>
-{
+auto process(auto& stream, const auto& request) -> demo::task<> {
     std::cout << "request=" << request << "\n";
-    std::string method, url, version;
-    std::string body;
+    std::string        method, url, version;
+    std::string        body;
     std::ostringstream out;
-    if (std::istringstream(request) >> method >> url >> version
-        && files.contains(url))
-    {
-    std::cout << "url=" << url << "\n";
+    if (std::istringstream(request) >> method >> url >> version && files.contains(url)) {
+        std::cout << "url=" << url << "\n";
         out << std::ifstream(files[url]).rdbuf();
         body = out.str();
         out.str({});
     }
 
-    out << "HTTP/1.1 " << (body.empty()? "404 not found": "200 found") << "\r\n"
+    out << "HTTP/1.1 " << (body.empty() ? "404 not found" : "200 found") << "\r\n"
         << "Content-Length: " << body.size() << "\r\n"
         << "\r\n"
         << body;
@@ -49,49 +46,40 @@ auto process(auto& stream, auto const& request) -> demo::task<>
     co_await net::async_send(stream, net::buffer(response));
 }
 
-auto timeout(auto scheduler, auto duration, auto sender)
-{
-    return demo::when_any(
-        std::move(sender),
-        net::resume_after(scheduler, duration)
-           | demo::into_error([]{ return std::error_code(demo::timeout, demo::category()); })
-    );
+auto timeout(auto scheduler, auto duration, auto sender) {
+    return demo::when_any(std::move(sender), net::resume_after(scheduler, duration) | demo::into_error([] {
+                                                 return std::error_code(demo::timeout, demo::category());
+                                             }));
 }
 
-auto make_client_handler(auto scheduler, auto stream) -> demo::task<>
-{
-    char buffer[16];
+auto make_client_handler(auto scheduler, auto stream) -> demo::task<> {
+    char        buffer[16];
     std::string request;
     while (true)
-       try {
-       if (auto n = co_await timeout(scheduler, 2s, net::async_receive(stream, net::buffer(buffer)))) {
-           std::string_view data(buffer, n);
-           request += data;
-           if (request.find("\r\n\r\n") != request.npos)
-           {
-               co_await process(stream, request);
-               break;
-           }
-       }
-       else {
-        //std::cout << "ERROR (via expected): " << std::get<0>(n.error()).message() << "\n";
-        break;
-       }
-       }
-       catch (std::variant<std::error_code> const& ex) {
-        std::cout << "ERROR: " << std::get<0>(ex).message() << "\n";
-        break;
-       }
-
+        try {
+            if (auto n = co_await timeout(scheduler, 2s, net::async_receive(stream, net::buffer(buffer)))) {
+                std::string_view data(buffer, n);
+                request += data;
+                if (request.find("\r\n\r\n") != request.npos) {
+                    co_await process(stream, request);
+                    break;
+                }
+            } else {
+                // std::cout << "ERROR (via expected): " << std::get<0>(n.error()).message() << "\n";
+                break;
+            }
+        } catch (const std::variant<std::error_code>& ex) {
+            std::cout << "ERROR: " << std::get<0>(ex).message() << "\n";
+            break;
+        }
 
     co_return;
 }
 
-auto main() -> int
-{
+auto main() -> int {
     demo::scope scope;
 
-    net::io_context context;
+    net::io_context        context;
     net::ip::tcp::endpoint endpoint(net::ip::address_v4::any(), 12345);
     net::ip::tcp::acceptor acceptor(context, endpoint);
 

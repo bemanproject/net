@@ -8,8 +8,7 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net::detail::ex::detail
-{
+namespace beman::net::detail::ex::detail {
 using ::beman::execution::detail::forward_like;
 using ::beman::execution::detail::sender_adaptor;
 using ::beman::execution::detail::type_list;
@@ -18,10 +17,9 @@ using ::beman::execution::detail::meta::combine;
 using ::beman::execution::detail::meta::filter;
 using ::beman::execution::detail::meta::transform;
 using ::beman::execution::detail::meta::unique;
-}
+} // namespace beman::net::detail::ex::detail
 
-namespace beman::net::detail::ex
-{
+namespace beman::net::detail::ex {
 using ::beman::execution::completion_signatures;
 using ::beman::execution::detail::decayed_tuple;
 
@@ -74,7 +72,7 @@ using ::beman::execution::then;
 using ::beman::execution::upon_error;
 using ::beman::execution::upon_stopped;
 using ::beman::execution::detail::write_env;
-}
+} // namespace beman::net::detail::ex
 
 // ----------------------------------------------------------------------------
 

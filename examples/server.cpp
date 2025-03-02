@@ -16,53 +16,46 @@ using namespace std::chrono_literals;
 
 auto use(auto&&) -> void {}
 
-///timeout(time, sender, ....)
+/// timeout(time, sender, ....)
 ///{
-///    return when_any(sender..., resume_after(time) | into_error())
-///}
+///     return when_any(sender..., resume_after(time) | into_error())
+/// }
 
-auto make_client( auto client) -> demo::task<void>
-{
-    try
-    {
+auto make_client(auto client) -> demo::task<void> {
+    try {
         char buffer[8];
         while (auto size = co_await net::async_receive(client, net::buffer(buffer)))
-        //while (auto size = co_await timeout(
-        //    net::async_receive(client, net::buffer(buffer),
-        //    resume_after(5s);
+        // while (auto size = co_await timeout(
+        //     net::async_receive(client, net::buffer(buffer),
+        //     resume_after(5s);
         //) | upon_error[](auto){ return 0; })))
         {
             std::string_view message(+buffer, size);
             std::cout << "received<" << size << ">(" << message << ")\n";
             auto ssize = co_await net::async_send(client, net::const_buffer(buffer, size));
-            std::cout << "sent<" << ssize << "/" << message.size() << ">("
-                      << ::std::string_view(buffer, ssize) << ")\n";
+            std::cout << "sent<" << ssize << "/" << message.size() << ">(" << ::std::string_view(buffer, ssize)
+                      << ")\n";
         }
         std::cout << "client done\n";
-    }
-    catch(const std::exception& e)
-    {
+    } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';
     }
 }
 
-struct receiver
-{
+struct receiver {
     using receiver_concept = ex::receiver_t;
     auto set_error(auto&&) && noexcept -> void {}
     auto set_stopped() && noexcept -> void {}
     auto set_value(auto&&...) && noexcept -> void {}
 };
 
-int main()
-{
+int main() {
     std::cout << std::unitbuf;
     std::cout << "example server\n";
 
-    try
-    {
-        demo::scope            scope;
-        net::io_context        context;
+    try {
+        demo::scope     scope;
+        net::io_context context;
 
         scope.spawn(std::invoke(
             [](auto& scp, auto& ctxt) -> demo::task<> {
@@ -88,9 +81,7 @@ int main()
             context));
 
         context.run();
-    }
-    catch (std::exception const& ex)
-    {
+    } catch (const std::exception& ex) {
         std::cout << "EXCEPTION: " << ex.what() << "\n";
         abort();
     }

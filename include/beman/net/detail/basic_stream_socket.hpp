@@ -15,42 +15,34 @@
 // ----------------------------------------------------------------------------
 
 template <typename Protocol>
-class beman::net::basic_stream_socket
-    : public basic_socket<Protocol>
-{
-public:
+class beman::net::basic_stream_socket : public basic_socket<Protocol> {
+  public:
     using native_handle_type = ::beman::net::detail::native_handle_type;
-    using protocol_type = Protocol;
-    using endpoint_type = typename protocol_type::endpoint;
+    using protocol_type      = Protocol;
+    using endpoint_type      = typename protocol_type::endpoint;
 
-private:
+  private:
     endpoint_type d_endpoint;
 
-public:
-    basic_stream_socket(basic_stream_socket&&) = default;
-    basic_stream_socket& operator= (basic_stream_socket&&) = default;
+  public:
+    basic_stream_socket(basic_stream_socket&&)            = default;
+    basic_stream_socket& operator=(basic_stream_socket&&) = default;
     basic_stream_socket(::beman::net::detail::context_base* context, ::beman::net::detail::socket_id id)
-        : basic_socket<Protocol>(context, id)
-    {
-    }
-    basic_stream_socket(::beman::net::io_context& context, endpoint_type const& endpoint)
-        : beman::net::basic_socket<Protocol>(context.get_scheduler().get_context(),
-            ::std::invoke([p = endpoint.protocol(), &context]{
-                ::std::error_code error{};
-                auto rc(context.make_socket(p.family(), p.type(), p.protocol(), error));
-                if (error)
-                {
-                    throw ::std::system_error(error);
-                }
-                return rc;
-            }))
-        , d_endpoint(endpoint) 
-    {
-    }
+        : basic_socket<Protocol>(context, id) {}
+    basic_stream_socket(::beman::net::io_context& context, const endpoint_type& endpoint)
+        : beman::net::basic_socket<Protocol>(
+              context.get_scheduler().get_context(), ::std::invoke([p = endpoint.protocol(), &context] {
+                  ::std::error_code error{};
+                  auto              rc(context.make_socket(p.family(), p.type(), p.protocol(), error));
+                  if (error) {
+                      throw ::std::system_error(error);
+                  }
+                  return rc;
+              })),
+          d_endpoint(endpoint) {}
 
     auto get_endpoint() const -> endpoint_type { return this->d_endpoint; }
 };
-
 
 // ----------------------------------------------------------------------------
 

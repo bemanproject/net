@@ -11,23 +11,36 @@
 
 // ----------------------------------------------------------------------------
 
-class beman::net::socket_base
-{
-public:
+class beman::net::socket_base {
+  public:
     template <typename Value, int Level, int Name>
-    class socket_option
-    {
-    private:
+    class socket_option {
+      private:
         Value d_value;
-    
-    public:
-        explicit socket_option(Value v): d_value(v) {}
+
+      public:
+        explicit socket_option(Value v) : d_value(v) {}
         Value value() const { return this->d_value; }
-        template <typename Protocol> auto data(Protocol&&) const -> Value const* { return &this->d_value; }
-        template <typename Protocol> auto data(Protocol&&)       -> Value const* { return &this->d_value; }
-        template <typename Protocol> constexpr auto level(Protocol&&) const -> int { return Level; }
-        template <typename Protocol> constexpr auto name(Protocol&&) const -> int { return Name; }
-        template <typename Protocol> constexpr auto size(Protocol&&) const -> ::socklen_t { return sizeof(Value); }
+        template <typename Protocol>
+        auto data(Protocol&&) const -> const Value* {
+            return &this->d_value;
+        }
+        template <typename Protocol>
+        auto data(Protocol&&) -> const Value* {
+            return &this->d_value;
+        }
+        template <typename Protocol>
+        constexpr auto level(Protocol&&) const -> int {
+            return Level;
+        }
+        template <typename Protocol>
+        constexpr auto name(Protocol&&) const -> int {
+            return Name;
+        }
+        template <typename Protocol>
+        constexpr auto size(Protocol&&) const -> ::socklen_t {
+            return sizeof(Value);
+        }
     };
     class broadcast;
     class debug;
@@ -37,11 +50,9 @@ public:
     class out_of_band_inline;
     class receive_buffer_size;
     class receive_low_watermark;
-    class reuse_address
-        : public socket_option<int, SOL_SOCKET, SO_REUSEADDR>
-    {
-    public:
-        explicit reuse_address(bool value): socket_option(value) {}
+    class reuse_address : public socket_option<int, SOL_SOCKET, SO_REUSEADDR> {
+      public:
+        explicit reuse_address(bool value) : socket_option(value) {}
         explicit operator bool() const { return this->value(); }
     };
     class send_buffer_size;
@@ -64,8 +75,8 @@ public:
 
     static constexpr int max_listen_connections{SOMAXCONN};
 
-protected:
-    socket_base() = default;
+  protected:
+    socket_base()  = default;
     ~socket_base() = default;
 };
 

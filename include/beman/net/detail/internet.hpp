@@ -19,27 +19,26 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net::ip
-{
-    using port_type = ::std::uint_least16_t;
+namespace beman::net::ip {
+using port_type = ::std::uint_least16_t;
 
-    class tcp;
-    class address_v4;
-    class address_v6;
-    class address;
-    template <typename> class basic_endpoint;
-}
+class tcp;
+class address_v4;
+class address_v6;
+class address;
+template <typename>
+class basic_endpoint;
+} // namespace beman::net::ip
 
 // ----------------------------------------------------------------------------
 
-class beman::net::ip::tcp
-{
-private:
+class beman::net::ip::tcp {
+  private:
     int d_family;
 
-    constexpr tcp(int f): d_family(f) {}
+    constexpr tcp(int f) : d_family(f) {}
 
-public:
+  public:
     using endpoint = basic_endpoint<tcp>;
     using socket   = basic_stream_socket<tcp>;
     using acceptor = basic_socket_acceptor<tcp>;
@@ -56,24 +55,20 @@ public:
 
 // ----------------------------------------------------------------------------
 
-class beman::net::ip::address_v4
-{
-public:
+class beman::net::ip::address_v4 {
+  public:
     using uint_type = uint_least32_t;
     struct bytes_type;
 
-private:
+  private:
     uint_type d_address;
 
-public:
-    constexpr address_v4() noexcept: d_address() {}
-    constexpr address_v4(address_v4 const&) noexcept = default;
-    constexpr address_v4(bytes_type const&);
-    explicit constexpr address_v4(uint_type a)
-        : d_address(a)
-    {
-        if (!(a <= 0xFF'FF'FF'FF))
-        {
+  public:
+    constexpr address_v4() noexcept : d_address() {}
+    constexpr address_v4(const address_v4&) noexcept = default;
+    constexpr address_v4(const bytes_type&);
+    explicit constexpr address_v4(uint_type a) : d_address(a) {
+        if (!(a <= 0xFF'FF'FF'FF)) {
             throw ::std::out_of_range("IPv4 address is out of range");
         }
     }
@@ -82,10 +77,10 @@ public:
 
     constexpr auto is_unspecified() const noexcept -> bool { return this->to_uint() == 0u; }
     constexpr auto is_loopback() const noexcept -> bool { return (this->to_uint() & 0xFF'00'00'00) == 0x7F'00'00'00; }
-    constexpr auto is_multicast() const noexcept -> bool{ return (this->to_uint() & 0xF0'00'00'00) == 0xE0'00'00'00; }
+    constexpr auto is_multicast() const noexcept -> bool { return (this->to_uint() & 0xF0'00'00'00) == 0xE0'00'00'00; }
     constexpr auto to_bytes() const noexcept -> bytes_type;
-    constexpr auto to_uint() const noexcept -> uint_type  { return this->d_address; }
-    template<typename Allocator = ::std::allocator<char>>
+    constexpr auto to_uint() const noexcept -> uint_type { return this->d_address; }
+    template <typename Allocator = ::std::allocator<char>>
     auto to_string(const Allocator& = Allocator()) const
         -> ::std::basic_string<char, ::std::char_traits<char>, Allocator>;
 
@@ -93,13 +88,9 @@ public:
     static constexpr auto loopback() noexcept -> address_v4 { return address_v4(0x7F'00'00'01u); }
     static constexpr auto broadcast() noexcept -> address_v4 { return address_v4(0xFF'FF'FF'FFu); }
 
-    friend ::std::ostream& operator<< (::std::ostream& out, address_v4 const& a)
-    {
-        return out << ((a.d_address >> 24) & 0xFFu) << '.'
-                    << ((a.d_address >> 16) & 0xFFu) << '.'
-                    << ((a.d_address >>  8) & 0xFFu) << '.'
-                    << ((a.d_address >>  0) & 0xFFu)
-            ;
+    friend ::std::ostream& operator<<(::std::ostream& out, const address_v4& a) {
+        return out << ((a.d_address >> 24) & 0xFFu) << '.' << ((a.d_address >> 16) & 0xFFu) << '.'
+                   << ((a.d_address >> 8) & 0xFFu) << '.' << ((a.d_address >> 0) & 0xFFu);
     }
 };
 
@@ -128,42 +119,31 @@ basic_ostream<CharT, Traits>& os, const address_v4& addr);
 
 // ----------------------------------------------------------------------------
 
-class beman::net::ip::address_v6
-{
-public:
-    struct bytes_type
-        : ::std::array<unsigned char, 16>
-    {
+class beman::net::ip::address_v6 {
+  public:
+    struct bytes_type : ::std::array<unsigned char, 16> {
         template <typename... T>
-        explicit constexpr bytes_type(T... t)
-            : std::array<unsigned char, 16>{{ static_cast<unsigned char>(t)... }}
-        {
-        }
+        explicit constexpr bytes_type(T... t) : std::array<unsigned char, 16>{{static_cast<unsigned char>(t)...}} {}
     };
 
-private:
+  private:
     bytes_type d_bytes;
 
-public:
+  public:
     static constexpr auto any() noexcept -> address_v6;
     static constexpr auto loopback() noexcept -> address_v6;
 
     constexpr address_v6() noexcept;
-    constexpr address_v6(address_v6 const&) noexcept = default;
-    constexpr address_v6(unsigned char const (&addr)[16]) noexcept
-    {
-        ::std::memcpy(d_bytes.data(), addr, 16);
-    }
+    constexpr address_v6(const address_v6&) noexcept = default;
+    constexpr address_v6(const unsigned char (&addr)[16]) noexcept { ::std::memcpy(d_bytes.data(), addr, 16); }
 
-    auto operator= (address_v6 const&) noexcept -> address_v6& = default;
-    constexpr auto operator== (address_v6 const&) const -> bool = default;
-    constexpr auto operator<=> (address_v6 const&) const -> ::std::strong_ordering;
+    auto           operator=(const address_v6&) noexcept -> address_v6& = default;
+    constexpr auto operator==(const address_v6&) const -> bool          = default;
+    constexpr auto operator<=>(const address_v6&) const -> ::std::strong_ordering;
 
-    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const
-        -> ::socklen_t
-    {
-        addr.sin6_family = AF_INET6;
-        addr.sin6_port = htons(port);
+    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const -> ::socklen_t {
+        addr.sin6_family   = AF_INET6;
+        addr.sin6_port     = htons(port);
         addr.sin6_flowinfo = 0;
         ::std::memcpy(addr.sin6_addr.s6_addr, this->d_bytes.data(), 16);
         addr.sin6_scope_id = 0;
@@ -183,86 +163,69 @@ public:
     constexpr auto is_multicast_global() const noexcept -> bool;
     constexpr auto to_bytes() const noexcept -> bytes_type;
     template <typename Allocator = ::std::allocator<char>>
-    auto to_string(Allocator const& = {}) const
-        -> ::std::basic_string<char, ::std::char_traits<char>, Allocator>;
+    auto to_string(const Allocator& = {}) const -> ::std::basic_string<char, ::std::char_traits<char>, Allocator>;
 
-    friend ::std::ostream& operator<< (::std::ostream& out, address_v6 const&)
-    {
+    friend ::std::ostream& operator<<(::std::ostream& out, const address_v6&) {
         //-dk:TODO
         return out << "<TODO>::1";
     }
 };
 
-inline constexpr beman::net::ip::address_v6::address_v6() noexcept
-    : d_bytes()
-{
-}
+inline constexpr beman::net::ip::address_v6::address_v6() noexcept : d_bytes() {}
 
-inline constexpr auto beman::net::ip::address_v6::any() noexcept
-    -> ::beman::net::ip::address_v6
-{
+inline constexpr auto beman::net::ip::address_v6::any() noexcept -> ::beman::net::ip::address_v6 {
     return ::beman::net::ip::address_v6();
 }
 
-inline constexpr auto beman::net::ip::address_v6::loopback() noexcept
-    -> ::beman::net::ip::address_v6
-{
+inline constexpr auto beman::net::ip::address_v6::loopback() noexcept -> ::beman::net::ip::address_v6 {
     return ::beman::net::ip::address_v6();
 }
 
 // ----------------------------------------------------------------------------
 
-class beman::net::ip::address
-{
-private:
-    union address_t
-    {
+class beman::net::ip::address {
+  private:
+    union address_t {
         ::sockaddr_storage storage;
         ::sockaddr_in      inet;
         ::sockaddr_in6     inet6;
     };
-    
+
     address_t d_address;
 
-public:
-    constexpr address() noexcept
-        : d_address()
-    {
-        this->d_address.storage.ss_family = PF_INET;
-    }
-    constexpr address(address const&) noexcept = default;
+  public:
+    constexpr address() noexcept : d_address() { this->d_address.storage.ss_family = PF_INET; }
+    constexpr address(const address&) noexcept = default;
     /*-dk:TODO constexpr*/ address(const ::beman::net::ip::address_v4& addr) noexcept {
-        this->d_address.inet.sin_family = AF_INET;
+        this->d_address.inet.sin_family      = AF_INET;
         this->d_address.inet.sin_addr.s_addr = htonl(addr.to_uint());
-        this->d_address.inet.sin_port = 0xFF'FF;
+        this->d_address.inet.sin_port        = 0xFF'FF;
     }
     /*-dk:TODO constexpr*/ address(const ::beman::net::ip::address_v6& addr) noexcept {
         addr.get_address(this->d_address.inet6, 0xFF'FF);
     }
 
-    auto operator=(address const&) noexcept -> address& = default;
-    auto operator=(::beman::net::ip::address_v4 const&) noexcept -> address&;
-    auto operator=(::beman::net::ip::address_v6 const&) noexcept -> address&;
+    auto operator=(const address&) noexcept -> address& = default;
+    auto operator=(const ::beman::net::ip::address_v4&) noexcept -> address&;
+    auto operator=(const ::beman::net::ip::address_v6&) noexcept -> address&;
 
-    auto data() const -> ::sockaddr_storage const& { return this->d_address.storage; }
+    auto           data() const -> const ::sockaddr_storage& { return this->d_address.storage; }
     constexpr auto is_v4() const noexcept -> bool { return this->d_address.storage.ss_family == PF_INET; }
     constexpr auto is_v6() const noexcept -> bool { return this->d_address.storage.ss_family == PF_INET6; }
-    /*constexpr -dk:TODO*/ auto to_v4() const -> ::beman::net::ip::address_v4
-    {
-        return ::beman::net::ip::address_v4(ntohl(reinterpret_cast<::sockaddr_in const&>(this->d_address.storage).sin_addr.s_addr));
+    /*constexpr -dk:TODO*/ auto to_v4() const -> ::beman::net::ip::address_v4 {
+        return ::beman::net::ip::address_v4(
+            ntohl(reinterpret_cast<const ::sockaddr_in&>(this->d_address.storage).sin_addr.s_addr));
     }
-    constexpr auto to_v6() const -> ::beman::net::ip::address_v6
-    {
+    constexpr auto to_v6() const -> ::beman::net::ip::address_v6 {
         return ::beman::net::ip::address_v6(this->d_address.inet6.sin6_addr.s6_addr);
     }
     constexpr auto is_unspecified() const noexcept -> bool;
     constexpr auto is_loopback() const noexcept -> bool;
     constexpr auto is_multicast() const noexcept -> bool;
-    template<class Allocator = ::std::allocator<char>>
-    auto to_string(Allocator const& = Allocator()) const
+    template <class Allocator = ::std::allocator<char>>
+    auto to_string(const Allocator& = Allocator()) const
         -> ::std::basic_string<char, ::std::char_traits<char>, Allocator>;
-    friend ::std::ostream& operator<< (::std::ostream& out, address const& a)
-    {
+    friend ::std::ostream& operator<<(::std::ostream& out, const address& a) {
         if (a.is_v4())
             return out << a.to_v4();
         else
@@ -273,61 +236,52 @@ public:
 // ----------------------------------------------------------------------------
 
 template <typename Protocol>
-class beman::net::ip::basic_endpoint
-    : public ::beman::net::detail::endpoint
-{
-public:
+class beman::net::ip::basic_endpoint : public ::beman::net::detail::endpoint {
+  public:
     using protocol_type = Protocol;
 
-    constexpr basic_endpoint() noexcept
-        : basic_endpoint(::beman::net::ip::address(), ::beman::net::ip::port_type())
-    {
-    }
-    constexpr basic_endpoint(::beman::net::detail::endpoint const& ep) noexcept
-        : ::beman::net::detail::endpoint(ep)
-    {
-    }
+    constexpr basic_endpoint() noexcept : basic_endpoint(::beman::net::ip::address(), ::beman::net::ip::port_type()) {}
+    constexpr basic_endpoint(const ::beman::net::detail::endpoint& ep) noexcept : ::beman::net::detail::endpoint(ep) {}
     constexpr basic_endpoint(const protocol_type&, ::beman::net::ip::port_type) noexcept;
     constexpr basic_endpoint(const ip::address& address, ::beman::net::ip::port_type port) noexcept
-        : ::beman::net::detail::endpoint(&address.data(), address.is_v4()? sizeof(::sockaddr_in): sizeof(::sockaddr_in6))
-    {
-        (address.is_v4()
-         ? reinterpret_cast<::sockaddr_in&>(this->storage()).sin_port
-         : reinterpret_cast<::sockaddr_in6&>(this->storage()).sin6_port) = htons(port);
+        : ::beman::net::detail::endpoint(&address.data(),
+                                         address.is_v4() ? sizeof(::sockaddr_in) : sizeof(::sockaddr_in6)) {
+        (address.is_v4() ? reinterpret_cast<::sockaddr_in&>(this->storage()).sin_port
+                         : reinterpret_cast<::sockaddr_in6&>(this->storage()).sin6_port) = htons(port);
     }
 
-    constexpr auto protocol() const noexcept -> protocol_type
-    {
-        return this->storage().ss_family == PF_INET? ::beman::net::ip::tcp::v4(): ::beman::net::ip::tcp::v6();
+    constexpr auto protocol() const noexcept -> protocol_type {
+        return this->storage().ss_family == PF_INET ? ::beman::net::ip::tcp::v4() : ::beman::net::ip::tcp::v6();
     }
-    /*-dk:TODO constexpr*/ auto address() const noexcept -> ::beman::net::ip::address
-    {
-        switch (this->storage().ss_family)
-        {
-        default: return {};
-        case PF_INET: return ::beman::net::ip::address_v4(ntohl(reinterpret_cast<::sockaddr_in const&>(this->storage()).sin_addr.s_addr));
-        //-dk:TODO case PF_INET6: return ::beman::net::ip::address_v6(reinterpret_cast<::sockaddr_in6 const&>(this->storage()).sin6_addr.s_addr);
+    /*-dk:TODO constexpr*/ auto address() const noexcept -> ::beman::net::ip::address {
+        switch (this->storage().ss_family) {
+        default:
+            return {};
+        case PF_INET:
+            return ::beman::net::ip::address_v4(
+                ntohl(reinterpret_cast<const ::sockaddr_in&>(this->storage()).sin_addr.s_addr));
+            //-dk:TODO case PF_INET6: return ::beman::net::ip::address_v6(reinterpret_cast<::sockaddr_in6
+            //const&>(this->storage()).sin6_addr.s_addr);
         }
     }
-    auto address(::beman::net::ip::address const&) noexcept -> void;
-    constexpr auto port() const noexcept -> ::beman::net::ip::port_type
-    {
-        switch (this->storage().ss_family)
-        {
-            default: return {};
-            case PF_INET: return ntohs(reinterpret_cast<::sockaddr_in const&>(this->storage()).sin_port);
-            case PF_INET6: return ntohs(reinterpret_cast<::sockaddr_in6 const&>(this->storage()).sin6_port);
+    auto           address(const ::beman::net::ip::address&) noexcept -> void;
+    constexpr auto port() const noexcept -> ::beman::net::ip::port_type {
+        switch (this->storage().ss_family) {
+        default:
+            return {};
+        case PF_INET:
+            return ntohs(reinterpret_cast<const ::sockaddr_in&>(this->storage()).sin_port);
+        case PF_INET6:
+            return ntohs(reinterpret_cast<const ::sockaddr_in6&>(this->storage()).sin6_port);
         }
     }
     auto port(::beman::net::ip::port_type) noexcept -> void;
 
-    auto size() const -> ::socklen_t
-    {
-        return this->storage().ss_family == PF_INET? sizeof(::sockaddr_in): sizeof(::sockaddr_in6);
+    auto size() const -> ::socklen_t {
+        return this->storage().ss_family == PF_INET ? sizeof(::sockaddr_in) : sizeof(::sockaddr_in6);
     }
 
-    friend ::std::ostream& operator<< (std::ostream& out, basic_endpoint const& ep)
-    {
+    friend ::std::ostream& operator<<(std::ostream& out, const basic_endpoint& ep) {
         return out << ep.address() << ":" << ep.port();
     }
 };
