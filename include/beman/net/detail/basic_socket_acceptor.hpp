@@ -4,6 +4,7 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_BASIC_SOCKET_ACCEPTOR
 #define INCLUDED_BEMAN_NET_DETAIL_BASIC_SOCKET_ACCEPTOR
 
+#include "beman/net/detail/socket_base.hpp"
 #include <beman/net/detail/io_context.hpp>
 #include <beman/net/detail/socket_category.hpp>
 #include <system_error>

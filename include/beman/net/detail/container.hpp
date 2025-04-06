@@ -4,8 +4,11 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_CONTAINER
 #define INCLUDED_BEMAN_NET_DETAIL_CONTAINER
 
+#include <algorithm>
 #include <beman/net/detail/netfwd.hpp>
 #include <cstddef>
+#include <iterator>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -28,6 +31,10 @@ class beman::net::detail::container {
     auto insert(Record r) -> ::beman::net::detail::socket_id;
     auto erase(::beman::net::detail::socket_id id) -> void;
     auto operator[](::beman::net::detail::socket_id id) -> Record&;
+    // using iterator = decltype(records)::iterator;
+    // auto begin() -> iterator;
+    // auto end() -> iterator;
+    auto find(const Record& r) -> ::std::optional<::beman::net::detail::socket_id>;
 };
 
 // ----------------------------------------------------------------------------
@@ -53,6 +60,19 @@ template <typename Record>
 inline auto beman::net::detail::container<Record>::operator[](::beman::net::detail::socket_id id) -> Record& {
     assert(this->records[::std::size_t(id)].index() == 1u);
     return ::std::get<1>(this->records[::std::size_t(id)]);
+}
+
+template <typename Record>
+inline auto ::beman::net::detail::container<Record>::find(const Record& r)
+    -> ::std::optional<::beman::net::detail::socket_id> {
+    auto it = ::std::find_if(records.begin(), records.end(), [&](auto& l) {
+        return ::std::holds_alternative<Record>(l) && ::std::get<Record>(l) == r;
+    });
+
+    if (it == records.end()) {
+        return {};
+    }
+    return {::beman::net::detail::socket_id(::std::distance(records.begin(), it))};
 }
 
 // ----------------------------------------------------------------------------
