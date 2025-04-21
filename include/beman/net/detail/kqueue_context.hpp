@@ -60,21 +60,6 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
         ::beman::net::detail::io_base* operation;
     };
 
-#if TOBEDELETE
-    constexpr std::array<std::optional<int16_t>, 2> to_kqueue_filter(::beman::net::event_type event_type) {
-        switch (event_type) {
-        default:
-            return {};
-        case ::beman::net::event_type::in:
-            return {{{EVFILT_READ}, {}}};
-        case ::beman::net::event_type::out:
-            return {{{EVFILT_WRITE}, {}}};
-        case ::beman::net::event_type::in_out:
-            return {{{EVFILT_READ}, {EVFILT_WRITE}}};
-        }
-    }
-#endif
-
     constexpr auto to_native_filter(::beman::net::event_type event_type) -> std::span<const int16_t> {
         static constexpr std::array<int16_t, 1> read_filter      = {EVFILT_READ};
         static constexpr std::array<int16_t, 1> write_filter     = {EVFILT_WRITE};
@@ -99,31 +84,6 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
     ::beman::net::detail::context_base::task*                             d_tasks{};
     const int d_queue = kqueue(); // TODO: is this a good practise to put it here?
 
-    // constexpr beman::net::event_type to_event_kind(short events) {
-    //     switch (events & (EVFILT_READ | EVFILT_WRITE)) {
-    //     default:
-    //         return ::beman::net::event_type::none;
-    //     case EVFILT_READ:
-    //         return ::beman::net::event_type::out;
-    //     case EVFILT_WRITE:
-    //         return ::beman::net::event_type::in;
-    //         // case EVFILT_READ | EVFILT_WRITE: return toy::event_kind::both;
-    //     }
-    // }
-    //
-    // constexpr short int to_kqueue(::beman::net::event_type events) {
-    //     switch (events) {
-    //     default:
-    //     case ::beman::net::event_type::none:
-    //         return 0;
-    //     case toy::event_kind::read:
-    //         return EVFILT_READ;
-    //     case toy::event_kind::write:
-    //         return EVFILT_WRITE;
-    //     case toy::event_kind::both:
-    //         return EVFILT_READ | EVFILT_WRITE;
-    //     }
-    // }
     auto make_socket(int fd) -> ::beman::net::detail::socket_id override final { return this->d_sockets.insert(fd); }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id override final {
         int fd(::socket(d, t, p));
@@ -182,14 +142,6 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
         }
         return 0u;
     }
-#if TOBEDELETE
-    auto remove_outstanding(::beman::net::event_type event_type, intptr_t ident) {
-        auto filters = to_native_filter(event_type);
-        for (const auto f : filters) {
-            // const event_key_t key {}
-        }
-    }
-#endif
     auto remove_outstanding(::beman::net::detail::socket_id outstanding_id) {
         auto&      completion    = d_outstanding[outstanding_id];
         const auto native_handle = this->native_handle(completion->id);

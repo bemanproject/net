@@ -30,9 +30,9 @@ class io_context;
 
 class beman::net::io_context {
   private:
-    // ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::poll_context()};
-    ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::kqueue_context()};
-    ::beman::net::detail::context_base&                   d_context{*this->d_owned};
+    ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::poll_context()};
+    // ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::kqueue_context()};
+    ::beman::net::detail::context_base& d_context{*this->d_owned};
 
   public:
     using scheduler_type = ::beman::net::detail::io_context_scheduler;
