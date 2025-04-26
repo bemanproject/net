@@ -4,6 +4,7 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_QUEUE_CONTEXT
 #define INCLUDED_BEMAN_NET_DETAIL_QUEUE_CONTEXT
 
+#if defined(NET_HAS_KQUEUE)
 // ----------------------------------------------------------------------------
 
 #include "beman/net/detail/event_type.hpp"
@@ -402,4 +403,5 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
 
 // ----------------------------------------------------------------------------
 
+#endif
 #endif

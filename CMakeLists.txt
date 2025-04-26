@@ -4,7 +4,10 @@
 # cmake-format: on
 
 cmake_minimum_required(VERSION 3.23)
-project(beman_net VERSION 0.0.0 LANGUAGES CXX)
+project(
+  beman_net
+  VERSION 0.0.0
+  LANGUAGES CXX)
 set(TARGET_NAME net)
 set(TARGET_PREFIX beman.${TARGET_NAME})
 set(TARGET_LIBRARY beman_${TARGET_NAME})
@@ -13,13 +16,32 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 23)
 
+include(CheckIncludeFile)
+include(CheckCXXSourceCompiles)
+check_include_file(sys/event.h NET_HAS_KQUEUE)
+if(NET_HAS_KQUEUE)
+  add_compile_definitions(NET_HAS_KQUEUE)
+  check_cxx_source_compiles(
+    "
+    #include <sys/event.h>
+    #include <stdint.h>
+    int main() {
+        struct kevent ev{::uintptr_t(), ::int16_t(), EV_DELETE, ::uint32_t(), ::intptr_t(), nullptr, {}};
+        (void)ev;
+    }
+    "
+    NET_KEVENT_HAS_EXT)
+  if(NET_KEVENT_HAS_EXT)
+    add_compile_definitions(NET_KEVENT_HAS_EXT)
+  endif()
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
-    execution
-    # for local development, use SOURCE_DIR <path-to>/execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG e9c3032
-)
+  execution
+  # for local development, use SOURCE_DIR <path-to>/execution
+  GIT_REPOSITORY https://github.com/bemanproject/execution
+  GIT_TAG e9c3032)
 FetchContent_MakeAvailable(execution)
 
 include(CTest)

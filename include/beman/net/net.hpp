@@ -20,7 +20,9 @@
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/operations.hpp>
 #include <beman/net/detail/poll_context.hpp>
+#if defined(NET_HAS_KQUEUE)
 #include <beman/net/detail/kqueue_context.hpp>
+#endif
 #include <beman/net/detail/sender.hpp>
 #include <beman/net/detail/socket_base.hpp>
 #include <beman/net/detail/stop_token.hpp>
