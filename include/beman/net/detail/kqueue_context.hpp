@@ -44,9 +44,6 @@ struct beman::net::detail::kqueue_record final {
 };
 
 // ----------------------------------------------------------------------------
-static constexpr std::array<int16_t, 1> read_filter      = {EVFILT_READ};
-static constexpr std::array<int16_t, 1> write_filter     = {EVFILT_WRITE};
-static constexpr std::array<int16_t, 2> readwrite_filter = {EVFILT_READ, EVFILT_WRITE};
 
 struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_base {
     static constexpr size_t event_buffer_size = 10;
@@ -63,6 +60,10 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
         struct ::kevent                event;
         ::beman::net::detail::io_base* operation;
     };
+
+    static constexpr std::array<int16_t, 1> read_filter      = {EVFILT_READ};
+    static constexpr std::array<int16_t, 1> write_filter     = {EVFILT_WRITE};
+    static constexpr std::array<int16_t, 2> readwrite_filter = {EVFILT_READ, EVFILT_WRITE};
 
     constexpr auto to_native_filter(::beman::net::event_type event_type) -> std::span<const int16_t> {
 
