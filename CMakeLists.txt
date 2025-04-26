@@ -16,9 +16,9 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 23)
 
-include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
 include(CheckCXXSourceCompiles)
-check_include_file(sys/event.h NET_HAS_KQUEUE)
+check_include_file_cxx(sys/event.h NET_HAS_KQUEUE)
 if(NET_HAS_KQUEUE)
   add_compile_definitions(NET_HAS_KQUEUE)
   check_cxx_source_compiles(
