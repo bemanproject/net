@@ -7,8 +7,8 @@
 #if defined(NET_HAS_KQUEUE)
 // ----------------------------------------------------------------------------
 
-#include "beman/net/detail/event_type.hpp"
-#include "beman/net/detail/io_base.hpp"
+#include <beman/net/detail/event_type.hpp>
+#include <beman/net/detail/io_base.hpp>
 #include <array>
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/container.hpp>
@@ -49,7 +49,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
     static constexpr size_t event_buffer_size = 10;
     using time_t                              = ::std::chrono::system_clock::time_point;
     using timer_node_t                        = ::beman::net::detail::context_base::resume_at_operation;
-    using event_key_t                         = ::std::tuple<uintptr_t, int16_t>;
+    using event_key_t                         = ::std::tuple<::std::uintptr_t, ::std::int16_t>;
     struct get_time {
         auto operator()(auto* t) const -> time_t { return ::std::get<0>(*t); }
     };
@@ -61,11 +61,11 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
         ::beman::net::detail::io_base* operation;
     };
 
-    static constexpr std::array<int16_t, 1> read_filter      = {EVFILT_READ};
-    static constexpr std::array<int16_t, 1> write_filter     = {EVFILT_WRITE};
-    static constexpr std::array<int16_t, 2> readwrite_filter = {EVFILT_READ, EVFILT_WRITE};
+    static constexpr ::std::array<int16_t, 1> read_filter      = {EVFILT_READ};
+    static constexpr ::std::array<int16_t, 1> write_filter     = {EVFILT_WRITE};
+    static constexpr ::std::array<int16_t, 2> readwrite_filter = {EVFILT_READ, EVFILT_WRITE};
 
-    constexpr auto to_native_filter(::beman::net::event_type event_type) -> std::span<const int16_t> {
+    constexpr auto to_native_filter(::beman::net::event_type event_type) -> ::std::span<const ::std::int16_t> {
 
         switch (event_type) {
         case ::beman::net::event_type::in:
@@ -80,11 +80,11 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
     }
 
     ::beman::net::detail::container<::beman::net::detail::kqueue_record>  d_sockets;
-    ::std::map<event_key_t, std::vector<::beman::net::detail::socket_id>> d_event;
+    ::std::map<event_key_t, ::std::vector<::beman::net::detail::socket_id>> d_event;
     ::beman::net::detail::container<::beman::net::detail::io_base*>       d_outstanding;
     timer_priority_t                                                      d_timeouts;
     ::beman::net::detail::context_base::task*                             d_tasks{};
-    const int d_queue = kqueue(); // TODO: is this a good practise to put it here?
+    const int d_queue = ::kqueue(); // TODO: is this a good practise to put it here?
 
     auto make_socket(int fd) -> ::beman::net::detail::socket_id override final { return this->d_sockets.insert(fd); }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id override final {
@@ -155,7 +155,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
                 continue;
             }
             auto& event_completions = event_it->second;
-            auto  socket_it         = std::find(event_completions.begin(), event_completions.end(), outstanding_id);
+            auto  socket_it         = ::std::find(event_completions.begin(), event_completions.end(), outstanding_id);
             if (socket_it == event_completions.end()) {
                 continue;
             }
@@ -180,7 +180,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
             return ::std::size_t{};
         }
         auto                                    next_time{this->d_timeouts.value_or(now)};
-        std::array<kevent_t, event_buffer_size> evt_buffer;
+        ::std::array<kevent_t, event_buffer_size> evt_buffer;
         timespec                                timeout;
         if (now != next_time) {
             auto milliseconds = this->to_milliseconds(next_time - now);
@@ -206,7 +206,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
             auto        outstanding_evt = d_event.find(evt_key);
             if (d_event.end() == outstanding_evt || outstanding_evt->second.size() == 0) {
                 kevent_t evt;
-                EV_SET(&evt, std::get<0>(evt_key), std::get<1>(evt_key), EV_DELETE, 0, 0, nullptr);
+                EV_SET(&evt, ::std::get<0>(evt_key), ::std::get<1>(evt_key), EV_DELETE, 0, 0, nullptr);
                 kevent(d_queue, &evt, 1, nullptr, 0, nullptr);
             }
 
@@ -234,7 +234,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
                 const event_key_t key{native_handle, f};
                 d_event[key].emplace_back(outstanding_id);
                 kevent_t evt;
-                EV_SET(&evt, std::get<0>(key), std::get<1>(key), EV_ADD, 0, 0, nullptr);
+                EV_SET(&evt, ::std::get<0>(key), ::std::get<1>(key), EV_ADD, 0, 0, nullptr);
                 kevent(d_queue, &evt, 1, nullptr, 0, NULL);
             }
             this->wakeup();
@@ -254,7 +254,7 @@ struct beman::net::detail::kqueue_context final : ::beman::net::detail::context_
             op->cancel();
             cancel_op->cancel();
         } else {
-            std::cerr << "ERROR: kqueue_context::cancel(): entity not cancelled!\n";
+            ::std::cerr << "ERROR: kqueue_context::cancel(): entity not cancelled!\n";
         }
     }
     auto schedule(::beman::net::detail::context_base::task* tsk) -> void override {

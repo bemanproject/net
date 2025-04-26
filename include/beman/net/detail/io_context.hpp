@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------
 
 #if defined(NET_HAS_KQUEUE)
-#include "beman/net/detail/kqueue_context.hpp"
+#include <beman/net/detail/kqueue_context.hpp>
 #endif
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/context_base.hpp>
