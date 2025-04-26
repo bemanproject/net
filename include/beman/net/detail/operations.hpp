@@ -9,6 +9,7 @@
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/event_type.hpp>
 #include <beman/net/detail/sender.hpp>
+#include <sys/poll.h> // TODO: hard dependency with poll
 
 // ----------------------------------------------------------------------------
 

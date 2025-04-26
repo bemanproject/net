@@ -6,16 +6,17 @@
 
 // ----------------------------------------------------------------------------
 
+#if defined(NET_HAS_KQUEUE)
+#include <beman/net/detail/kqueue_context.hpp>
+#endif
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/io_context_scheduler.hpp>
 #include <beman/net/detail/poll_context.hpp>
 #include <beman/net/detail/container.hpp>
-#include <cstdint>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
-#include <limits>
 #include <cerrno>
 #include <csignal>
 
@@ -29,8 +30,12 @@ class io_context;
 
 class beman::net::io_context {
   private:
+#if defined(NET_HAS_KQUEUE)
+    ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::kqueue_context()};
+#else
     ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::poll_context()};
-    ::beman::net::detail::context_base&                   d_context{*this->d_owned};
+#endif
+    ::beman::net::detail::context_base& d_context{*this->d_owned};
 
   public:
     using scheduler_type = ::beman::net::detail::io_context_scheduler;

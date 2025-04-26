@@ -33,6 +33,7 @@ target_sources(${TARGET_LIBRARY}
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/netfwd.hpp
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/operations.hpp
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/poll_context.hpp
+    ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/kqueue_context.hpp
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/sender.hpp
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/socket_base.hpp
     ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/socket_category.hpp
