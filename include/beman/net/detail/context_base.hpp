@@ -38,7 +38,7 @@ struct beman::net::detail::context_base {
         ::beman::net::detail::io_operation<::std::tuple<::std::chrono::system_clock::time_point, ::timeval>>;
 
     virtual ~context_base()                                                                                 = default;
-    virtual auto make_socket(int) -> ::beman::net::detail::socket_id                                        = 0;
+    virtual auto make_socket(::beman::net::detail::native_handle_type) -> ::beman::net::detail::socket_id                                        = 0;
     virtual auto make_socket(int, int, int, ::std::error_code&) -> ::beman::net::detail::socket_id          = 0;
     virtual auto release(::beman::net::detail::socket_id, ::std::error_code&) -> void                       = 0;
     virtual auto native_handle(::beman::net::detail::socket_id) -> ::beman::net::detail::native_handle_type = 0;

@@ -10,10 +10,10 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
-enum socket_id : ::std::uint_least32_t { invalid = ::std::numeric_limits<::std::uint_least32_t>::max() };
+enum class native_handle_type: int { invalid = -1 };
+
+enum class socket_id : ::std::uint_least32_t { invalid = ::std::numeric_limits<::std::uint_least32_t>::max() };
 struct context_base;
-using native_handle_type = int;
-inline constexpr native_handle_type invalid_handle{-1};
 } // namespace beman::net::detail
 
 namespace beman::net {
