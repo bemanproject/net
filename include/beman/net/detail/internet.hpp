@@ -145,7 +145,8 @@ class beman::net::ip::address_v6 {
     constexpr auto operator==(const address_v6&) const -> bool          = default;
     constexpr auto operator<=>(const address_v6&) const -> ::std::strong_ordering;
 
-    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const -> ::beman::net::detail::native_socklen_t {
+    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const
+        -> ::beman::net::detail::native_socklen_t {
         addr.sin6_family   = AF_INET6;
         addr.sin6_port     = htons(port);
         addr.sin6_flowinfo = 0;

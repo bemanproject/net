@@ -19,12 +19,13 @@ class endpoint;
 class beman::net::detail::endpoint {
   private:
     ::sockaddr_storage d_data{};
-    ::beman::net::detail::native_socklen_t        d_size{sizeof(::sockaddr_storage)};
+    ::beman::net::detail::native_socklen_t d_size{sizeof(::sockaddr_storage)};
 
   public:
     endpoint() = default;
     endpoint(const void* data, ::beman::net::detail::native_socklen_t size) : d_size(size) {
-        ::std::memcpy(&this->d_data, data, ::std::min(size, ::beman::net::detail::native_socklen_t(sizeof(::sockaddr_storage))));
+        ::std::memcpy(
+            &this->d_data, data, ::std::min(size, ::beman::net::detail::native_socklen_t(sizeof(::sockaddr_storage))));
     }
     template <typename ET>
     endpoint(ET& e) : endpoint(e.data(), e.size()) {}

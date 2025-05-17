@@ -12,13 +12,13 @@
 namespace beman::net::detail {
 #ifdef _MSC_VER
 struct native_iovec {
-    void* iov_base;
+    void*         iov_base;
     ::std::size_t iov_len;
 };
 #else
 using native_iovec = ::iovec;
 #endif
-}
+} // namespace beman::net::detail
 
 // ----------------------------------------------------------------------------
 

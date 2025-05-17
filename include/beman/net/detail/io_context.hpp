@@ -35,10 +35,10 @@ class beman::net::io_context {
     class executor_type {};
 
     io_context() {
-        #ifndef _MSC_VER
+#ifndef _MSC_VER
         std::signal(SIGPIPE, SIG_IGN);
-        #endif
-        }
+#endif
+    }
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
 
@@ -51,12 +51,12 @@ class beman::net::io_context {
     auto native_handle(::beman::net::detail::socket_id id) -> ::beman::net::detail::native_handle_type {
         return this->d_context.native_handle(id);
     }
-    auto set_option(::beman::net::detail::socket_id id,
-                    int                             level,
-                    int                             name,
-                    const void*                     data,
-                    ::beman::net::detail::native_socklen_t                     size,
-                    ::std::error_code&              error) -> void {
+    auto set_option(::beman::net::detail::socket_id        id,
+                    int                                    level,
+                    int                                    name,
+                    const void*                            data,
+                    ::beman::net::detail::native_socklen_t size,
+                    ::std::error_code&                     error) -> void {
         this->d_context.set_option(id, level, name, data, size, error);
     }
     auto bind(::beman::net::detail::socket_id                                id,

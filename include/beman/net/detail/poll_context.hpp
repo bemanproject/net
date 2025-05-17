@@ -40,12 +40,14 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     };
     using timer_priority_t = ::beman::net::detail::sorted_list<timer_node_t, ::std::less<>, get_time>;
     ::beman::net::detail::container<::beman::net::detail::poll_record> d_sockets;
-    ::std::vector<::beman::net::detail::native_poll_record>                                            d_poll;
+    ::std::vector<::beman::net::detail::native_poll_record>            d_poll;
     ::std::vector<::beman::net::detail::io_base*>                      d_outstanding;
     timer_priority_t                                                   d_timeouts;
     ::beman::net::detail::context_base::task*                          d_tasks{};
 
-    auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id override final { return this->d_sockets.insert(fd); }
+    auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id override final {
+        return this->d_sockets.insert(fd);
+    }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id override final {
         ::beman::net::detail::native_handle_type fd(beman::net::detail::make_socket(d, t, p));
         if (beman::net::detail::is_invalid_handle(fd)) {
@@ -64,12 +66,12 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     auto native_handle(::beman::net::detail::socket_id id) -> ::beman::net::detail::native_handle_type override final {
         return this->d_sockets[id].handle;
     }
-    auto set_option(::beman::net::detail::socket_id id,
-                    int                             level,
-                    int                             name,
-                    const void*                     data,
-                    ::beman::net::detail::native_socklen_t                     size,
-                    ::std::error_code&              error) -> void override final {
+    auto set_option(::beman::net::detail::socket_id        id,
+                    int                                    level,
+                    int                                    name,
+                    const void*                            data,
+                    ::beman::net::detail::native_socklen_t size,
+                    ::std::error_code&                     error) -> void override final {
         if (::beman::net::detail::set_socket_option(this->native_handle(id), level, name, data, size) < 0) {
             error = ::std::error_code(errno, ::std::system_category());
         }
@@ -131,7 +133,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
                 else
                     return ::beman::net::detail::native_nfds_t(s);
             }(this->d_poll.size()));
-            int    rc(::beman::net::detail::poll(this->d_poll.data(), sz, timeout));
+            int                                 rc(::beman::net::detail::poll(this->d_poll.data(), sz, timeout));
             if (rc < 0) {
                 switch (errno) {
                 default:
@@ -171,7 +173,8 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
             if (bool(completion->event & ::beman::net::event_type::out)) {
                 events |= POLLOUT;
             }
-            this->d_poll.push_back(::beman::net::detail::make_native_poll_record(this->native_handle(id), events, short()));
+            this->d_poll.push_back(
+                ::beman::net::detail::make_native_poll_record(this->native_handle(id), events, short()));
             this->d_outstanding.emplace_back(completion);
             this->wakeup();
             return ::beman::net::detail::submit_result::submit;
@@ -203,7 +206,8 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
             auto& cmp(*static_cast<accept_operation*>(comp));
 
             while (true) {
-                ::beman::net::detail::native_handle_type rc = ::beman::net::detail::accept(ctxt.native_handle(id), ::std::get<0>(cmp).data(), &::std::get<1>(cmp));
+                ::beman::net::detail::native_handle_type rc = ::beman::net::detail::accept(
+                    ctxt.native_handle(id), ::std::get<0>(cmp).data(), &::std::get<1>(cmp));
                 if (::beman::net::detail::is_valid_handle(rc)) {
                     ::std::get<2>(cmp) = ctxt.make_socket(rc);
                     cmp.complete();
@@ -227,13 +231,13 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
         -> ::beman::net::detail::submit_result override {
         auto        handle{this->native_handle(op->id)};
         const auto& endpoint(::std::get<0>(*op));
-        #ifndef _MSC_VER
+#ifndef _MSC_VER
         //-dk:TODO
         if (-1 == ::beman::net::detail::file_control(handle, F_SETFL, O_NONBLOCK)) {
             op->error(::std::error_code(errno, ::std::system_category()));
             return ::beman::net::detail::submit_result::error;
         }
-        #endif
+#endif
         if (0 == ::beman::net::detail::connect(handle, endpoint.data(), endpoint.size())) {
             op->complete();
             return ::beman::net::detail::submit_result::ready;
@@ -274,7 +278,8 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
         op->work    = [](::beman::net::detail::context_base& ctxt, ::beman::net::detail::io_base* o) {
             auto& completion(*static_cast<receive_operation*>(o));
             while (true) {
-                auto rc{::beman::net::detail::receive_message(ctxt.native_handle(o->id), &::std::get<0>(completion), ::std::get<1>(completion))};
+                auto rc{::beman::net::detail::receive_message(
+                    ctxt.native_handle(o->id), &::std::get<0>(completion), ::std::get<1>(completion))};
                 if (0 <= rc) {
                     ::std::get<2>(completion) = ::std::size_t(rc);
                     completion.complete();
@@ -304,7 +309,8 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
             auto& completion(*static_cast<send_operation*>(o));
 
             while (true) {
-                auto rc{::beman::net::detail::send_message(ctxt.native_handle(o->id), &::std::get<0>(completion), ::std::get<1>(completion))};
+                auto rc{::beman::net::detail::send_message(
+                    ctxt.native_handle(o->id), &::std::get<0>(completion), ::std::get<1>(completion))};
                 if (0 <= rc) {
                     ::std::get<2>(completion) = ::std::size_t(rc);
                     completion.complete();
