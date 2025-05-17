@@ -232,8 +232,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
         auto        handle{this->native_handle(op->id)};
         const auto& endpoint(::std::get<0>(*op));
 #ifndef _MSC_VER
-        //-dk:TODO
-        if (-1 == ::beman::net::detail::file_control(handle, F_SETFL, O_NONBLOCK)) {
+        if (-1 == ::beman::net::detail::set_nonblocking(handle)) {
             op->error(::std::error_code(errno, ::std::system_category()));
             return ::beman::net::detail::submit_result::error;
         }

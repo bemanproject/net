@@ -105,14 +105,14 @@ struct beman::net::detail::send_desc {
             ::beman::net::detail::ex::set_value(::std::move(receiver), ::std::move(::std::get<2>(o)));
         }
         auto submit(auto* base) -> ::beman::net::detail::submit_result {
-            ::std::get<0>(*base).msg_iov    = this->d_buffers.data();
-            ::std::get<0>(*base).msg_iovlen = [](auto x) {
-                using iovlen = decltype(::beman::net::detail::native_msghdr().msg_iovlen);
+            ::beman::net::detail::set_msg_iov(std::get<0>(*base), this->d_buffers.data());
+            ::beman::net::detail::set_msg_iovlen(::std::get<0>(*base), [](auto x) {
+                using iovlen = decltype(::beman::net::detail::get_msg_iovlen(::beman::net::detail::native_msghdr()));
                 if constexpr (std::same_as<decltype(x), iovlen>)
                     return x;
                 else
                     return iovlen(x);
-            }(this->d_buffers.size());
+            }(this->d_buffers.size()));
             return this->d_stream.get_scheduler().send(base);
         }
     };
@@ -160,14 +160,14 @@ struct beman::net::detail::receive_desc {
             ::beman::net::detail::ex::set_value(::std::move(receiver), ::std::get<2>(o));
         }
         auto submit(auto* base) -> ::beman::net::detail::submit_result {
-            ::std::get<0>(*base).msg_iov    = this->d_buffers.data();
-            ::std::get<0>(*base).msg_iovlen = [](auto x) {
-                using iovlen = decltype(::beman::net::detail::native_msghdr().msg_iovlen);
+            ::beman::net::detail::set_msg_iov(std::get<0>(*base), this->d_buffers.data());
+            ::beman::net::detail::set_msg_iovlen(::std::get<0>(*base), [](auto x) {
+                using iovlen = decltype(::beman::net::detail::get_msg_iovlen(::beman::net::detail::native_msghdr()));
                 if constexpr (std::same_as<decltype(x), iovlen>)
                     return x;
                 else
                     return iovlen(x);
-            }(this->d_buffers.size());
+            }(this->d_buffers.size()));
             return this->d_stream.get_scheduler().receive(base);
         }
     };

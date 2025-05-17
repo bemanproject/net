@@ -17,7 +17,7 @@ namespace beman::net::detail {
 #ifdef _MSC_VER
 using native_handle_type = SOCKET;
 #else
-enum class native_handle_type : int { invalid = -1 };
+enum class native_handle_type : int {};
 #endif
 
 enum class socket_id : ::std::uint_least32_t { invalid = ::std::numeric_limits<::std::uint_least32_t>::max() };

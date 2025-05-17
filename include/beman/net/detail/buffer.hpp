@@ -11,12 +11,11 @@
 
 namespace beman::net::detail {
 #ifdef _MSC_VER
-struct native_iovec {
-    void*         iov_base;
-    ::std::size_t iov_len;
-};
+using native_iovec = WSABUF;
+inline auto make_iov(auto base, auto len) { return ::WSABUF{.len = ULONG(len), .buf = static_cast<char*>(base)}; }
 #else
 using native_iovec = ::iovec;
+inline auto make_iov(auto base, auto len) { return ::iovec{.iov_base = base, .iov_len = len}; }
 #endif
 } // namespace beman::net::detail
 
@@ -75,7 +74,7 @@ inline auto beman::net::stream_category() noexcept -> const ::std::error_categor
 
 struct beman::net::mutable_buffer {
     ::beman::net::detail::native_iovec _Vec;
-    mutable_buffer(void* _B, ::std::size_t _L) : _Vec{.iov_base = _B, .iov_len = _L} {}
+    mutable_buffer(void* _B, ::std::size_t _L) : _Vec(::beman::net::detail::make_iov(_B, _L)) {}
 
     auto data() -> ::beman::net::detail::native_iovec* { return &this->_Vec; }
     auto size() -> ::std::size_t { return 1u; }
@@ -83,7 +82,7 @@ struct beman::net::mutable_buffer {
 
 struct beman::net::const_buffer {
     ::beman::net::detail::native_iovec _Vec;
-    const_buffer(const void* _B, ::std::size_t _L) : _Vec{.iov_base = const_cast<void*>(_B), .iov_len = _L} {}
+    const_buffer(const void* _B, ::std::size_t _L) : _Vec(::beman::net::detail::make_iov(const_cast<void*>(_B), _L)) {}
 
     auto data() -> ::beman::net::detail::native_iovec* { return &this->_Vec; }
     auto size() -> ::std::size_t { return 1u; }

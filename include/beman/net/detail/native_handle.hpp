@@ -19,12 +19,9 @@ namespace beman::net::detail {
 
 #ifdef _MSC_VER
 using native_socklen_t = int;
-using native_nfds_t    = ::std::size_t;
-struct native_msghdr {
-    void*         msg_iov;
-    ::std::size_t msg_iovlen;
-};
-using native_ssize_t = int;
+using native_nfds_t    = unsigned long;
+using native_msghdr    = WSAMSG;
+using native_ssize_t   = int;
 
 #else
 using native_socklen_t = ::socklen_t;
@@ -39,6 +36,29 @@ inline auto native_handle_extract(native_handle_type handle) {
     return handle;
 #else
     return static_cast<int>(handle);
+#endif
+}
+
+inline auto set_msg_iov(native_msghdr& msg, auto value) -> void {
+#ifdef _MSC_VER
+    msg.lpBuffers = value;
+#else
+    msg.msg_iov = value;
+#endif
+}
+inline auto get_msg_iovlen(const native_msghdr& msg) {
+#ifdef _MSC_VER
+    return msg.dwBufferCount;
+#else
+    return msg.msg_iovlen;
+#endif
+}
+
+inline auto set_msg_iovlen(native_msghdr& msg, auto value) -> void {
+#ifdef _MSC_VER
+    msg.dwBufferCount = value;
+#else
+    msg.msg_iovlen = value;
 #endif
 }
 // ----------------------------------------------------------------------------
@@ -59,36 +79,27 @@ inline auto is_valid_handle(native_handle_type handle) -> bool {
 inline auto make_socket(int domain, int type, int protocol) -> native_handle_type {
     return native_handle_type{::socket(domain, type, protocol)};
 }
-inline auto close_socket([[maybe_unused]] native_handle_type handle) -> int {
+inline auto close_socket(native_handle_type handle) -> int {
 #ifdef _MSC_VER
-    return {}; //-dk:TODO
+    return ::closesocket(handle);
 #else
     return ::close(::beman::net::detail::native_handle_extract(handle));
 #endif
 }
 
-inline auto set_socket_option([[maybe_unused]] native_handle_type                     handle,
-                              [[maybe_unused]] int                                    level,
-                              [[maybe_unused]] int                                    name,
-                              [[maybe_unused]] const void*                            data,
-                              [[maybe_unused]] ::beman::net::detail::native_socklen_t size) -> int {
-#ifdef _MSC_VER
-    return {}; //-dk:TODO
-#else
-    return ::setsockopt(::beman::net::detail::native_handle_extract(handle), level, name, data, size);
-#endif
+inline auto set_socket_option(native_handle_type                     handle,
+                              int                                    level,
+                              int                                    name,
+                              const void*                            data,
+                              ::beman::net::detail::native_socklen_t size) -> int {
+    return ::setsockopt(
+        ::beman::net::detail::native_handle_extract(handle), level, name, static_cast<const char*>(data), size);
 }
 
-inline auto get_socket_option([[maybe_unused]] native_handle_type                      handle,
-                              [[maybe_unused]] int                                     level,
-                              [[maybe_unused]] int                                     name,
-                              [[maybe_unused]] void*                                   data,
-                              [[maybe_unused]] ::beman::net::detail::native_socklen_t* size) -> int {
-#ifdef _MSC_VER
-    return {}; //-dk:TODO
-#else
-    return ::getsockopt(::beman::net::detail::native_handle_extract(handle), level, name, data, size);
-#endif
+inline auto get_socket_option(
+    native_handle_type handle, int level, int name, void* data, ::beman::net::detail::native_socklen_t* size) -> int {
+    return ::getsockopt(
+        ::beman::net::detail::native_handle_extract(handle), level, name, static_cast<char*>(data), size);
 }
 
 inline auto bind(native_handle_type handle, const ::sockaddr* addr, ::beman::net::detail::native_socklen_t size) {
@@ -96,11 +107,7 @@ inline auto bind(native_handle_type handle, const ::sockaddr* addr, ::beman::net
 }
 
 inline auto accept(native_handle_type handle, ::sockaddr* addr, ::beman::net::detail::native_socklen_t* size) {
-#ifdef _MSC_VER
-    return native_handle_type{::accept(handle, addr, size)};
-#else
     return native_handle_type{::accept(::beman::net::detail::native_handle_extract(handle), addr, size)};
-#endif
 }
 
 inline auto connect(native_handle_type handle, const ::sockaddr* addr, ::beman::net::detail::native_socklen_t size)
@@ -117,41 +124,47 @@ inline auto make_native_poll_record(native_handle_type handle, native_event_type
     return native_poll_record{::beman::net::detail::native_handle_extract(handle), events, revents};
 }
 
-inline auto file_control([[maybe_unused]] native_handle_type handle,
-                         [[maybe_unused]] int                command,
-                         [[maybe_unused]] auto... args) -> int {
+inline auto set_nonblocking(native_handle_type handle) {
 #ifdef _MSC_VER
-    return {}; //-dk:TODO
+    unsigned long flag(1);
+    return ::ioctlsocket(handle, FIONBIO, &flag);
 #else
-    return ::fcntl(::beman::net::detail::native_handle_extract(handle), command, args...);
+    return ::fcntl(::beman::net::detail::native_handle_extract(handle), F_SETFL, O_NONBLOCK);
 #endif
 }
 
-inline auto send_message([[maybe_unused]] native_handle_type                         handle,
-                         [[maybe_unused]] const ::beman::net::detail::native_msghdr* message,
-                         [[maybe_unused]] int flags) -> ::beman::net::detail::native_ssize_t {
+inline auto send_message(native_handle_type handle, ::beman::net::detail::native_msghdr* message, int flags)
+    -> ::beman::net::detail::native_ssize_t {
 #ifdef _MSC_VER
-    return {}; //-dk:TODO
+    DWORD sent{};
+    if (SOCKET_ERROR == WSASend(handle, message->lpBuffers, message->dwBufferCount, &sent, flags, nullptr, nullptr)) {
+        return -1;
+    }
+    return sent;
 #else
     return ::sendmsg(::beman::net::detail::native_handle_extract(handle), message, flags);
 #endif
 }
 
-inline auto receive_message([[maybe_unused]] native_handle_type                   handle,
-                            [[maybe_unused]] ::beman::net::detail::native_msghdr* message,
-                            [[maybe_unused]] int flags) -> ::beman::net::detail::native_ssize_t {
+inline auto receive_message(native_handle_type handle, ::beman::net::detail::native_msghdr* message, int flags)
+    -> ::beman::net::detail::native_ssize_t {
 #ifdef _MSC_VER
-    return {}; //-dk:TODO
+    DWORD received{};
+    DWORD dFlags(flags);
+    if (SOCKET_ERROR ==
+        WSARecv(handle, message->lpBuffers, message->dwBufferCount, &received, &dFlags, nullptr, nullptr)) {
+        return -1;
+    }
+    return received;
 #else
     return ::recvmsg(::beman::net::detail::native_handle_extract(handle), message, flags);
 #endif
 }
 
-inline auto poll([[maybe_unused]] ::beman::net::detail::native_poll_record* data,
-                 [[maybe_unused]] ::beman::net::detail::native_nfds_t       size,
-                 [[maybe_unused]] int                                       timeout) -> int {
+inline auto poll(::beman::net::detail::native_poll_record* data, ::beman::net::detail::native_nfds_t size, int timeout)
+    -> int {
 #ifdef _MSC_VER
-    return {}; //-dk:TODO
+    return ::WSAPoll(data, size, timeout);
 #else
     return ::poll(data, size, timeout);
 #endif
