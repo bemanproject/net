@@ -7,14 +7,12 @@
 // ----------------------------------------------------------------------------
 
 #include <beman/net/detail/netfwd.hpp>
+#include <beman/net/detail/native_handle.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/io_context_scheduler.hpp>
 #include <beman/net/detail/poll_context.hpp>
 #include <beman/net/detail/container.hpp>
 #include <cstdint>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <poll.h>
 #include <limits>
 #include <cerrno>
 #include <csignal>
@@ -36,7 +34,11 @@ class beman::net::io_context {
     using scheduler_type = ::beman::net::detail::io_context_scheduler;
     class executor_type {};
 
-    io_context() { std::signal(SIGPIPE, SIG_IGN); }
+    io_context() {
+        #ifndef _MSC_VER
+        std::signal(SIGPIPE, SIG_IGN);
+        #endif
+        }
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
 
@@ -53,7 +55,7 @@ class beman::net::io_context {
                     int                             level,
                     int                             name,
                     const void*                     data,
-                    ::socklen_t                     size,
+                    ::beman::net::detail::native_socklen_t                     size,
                     ::std::error_code&              error) -> void {
         this->d_context.set_option(id, level, name, data, size, error);
     }

@@ -4,11 +4,21 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_BUFFER
 #define INCLUDED_BEMAN_NET_DETAIL_BUFFER
 
-#include <sys/socket.h>
 #include <string>
 #include <system_error>
 #include <cassert>
 #include <cstddef>
+
+namespace beman::net::detail {
+#ifdef _MSC_VER
+struct native_iovec {
+    void* iov_base;
+    ::std::size_t iov_len;
+};
+#else
+using native_iovec = ::iovec;
+#endif
+}
 
 // ----------------------------------------------------------------------------
 
@@ -64,18 +74,18 @@ inline auto beman::net::stream_category() noexcept -> const ::std::error_categor
 // ----------------------------------------------------------------------------
 
 struct beman::net::mutable_buffer {
-    ::iovec _Vec;
+    ::beman::net::detail::native_iovec _Vec;
     mutable_buffer(void* _B, ::std::size_t _L) : _Vec{.iov_base = _B, .iov_len = _L} {}
 
-    auto data() -> ::iovec* { return &this->_Vec; }
+    auto data() -> ::beman::net::detail::native_iovec* { return &this->_Vec; }
     auto size() -> ::std::size_t { return 1u; }
 };
 
 struct beman::net::const_buffer {
-    ::iovec _Vec;
+    ::beman::net::detail::native_iovec _Vec;
     const_buffer(const void* _B, ::std::size_t _L) : _Vec{.iov_base = const_cast<void*>(_B), .iov_len = _L} {}
 
-    auto data() -> ::iovec* { return &this->_Vec; }
+    auto data() -> ::beman::net::detail::native_iovec* { return &this->_Vec; }
     auto size() -> ::std::size_t { return 1u; }
 };
 

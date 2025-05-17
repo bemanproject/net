@@ -11,6 +11,7 @@
 #include <beman/net/detail/container.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/sorted_list.hpp>
+#include <tuple>
 #include <vector>
 #include <iostream>
 
@@ -67,7 +68,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
                     int                             level,
                     int                             name,
                     const void*                     data,
-                    ::socklen_t                     size,
+                    ::beman::net::detail::native_socklen_t                     size,
                     ::std::error_code&              error) -> void override final {
         if (::beman::net::detail::set_socket_option(this->native_handle(id), level, name, data, size) < 0) {
             error = ::std::error_code(errno, ::std::system_category());
@@ -124,13 +125,13 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
         while (true) {
             auto   next_time{this->d_timeouts.value_or(now)};
             int    timeout{now == next_time ? -1 : this->to_milliseconds(next_time - now)};
-            nfds_t sz([](auto s) {
-                if constexpr (::std::same_as<decltype(s), nfds_t>)
+            ::beman::net::detail::native_nfds_t sz([](auto s) {
+                if constexpr (::std::same_as<decltype(s), ::beman::net::detail::native_nfds_t>)
                     return s;
                 else
-                    return nfds_t(s);
+                    return ::beman::net::detail::native_nfds_t(s);
             }(this->d_poll.size()));
-            int    rc(::poll(this->d_poll.data(), sz, timeout));
+            int    rc(::beman::net::detail::poll(this->d_poll.data(), sz, timeout));
             if (rc < 0) {
                 switch (errno) {
                 default:
@@ -226,10 +227,13 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
         -> ::beman::net::detail::submit_result override {
         auto        handle{this->native_handle(op->id)};
         const auto& endpoint(::std::get<0>(*op));
+        #ifndef _MSC_VER
+        //-dk:TODO
         if (-1 == ::beman::net::detail::file_control(handle, F_SETFL, O_NONBLOCK)) {
             op->error(::std::error_code(errno, ::std::system_category()));
             return ::beman::net::detail::submit_result::error;
         }
+        #endif
         if (0 == ::beman::net::detail::connect(handle, endpoint.data(), endpoint.size())) {
             op->complete();
             return ::beman::net::detail::submit_result::ready;
@@ -248,7 +252,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
             auto hndl{ctxt.native_handle(o->id)};
 
             int         error{};
-            ::socklen_t len{sizeof(error)};
+            ::beman::net::detail::native_socklen_t len{sizeof(error)};
             if (-1 == ::beman::net::detail::get_socket_option(hndl, SOL_SOCKET, SO_ERROR, &error, &len)) {
                 o->error(::std::error_code(errno, ::std::system_category()));
                 return ::beman::net::detail::submit_result::error;

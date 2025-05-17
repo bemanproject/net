@@ -4,9 +4,9 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_ENDPOINT
 #define INCLUDED_BEMAN_NET_DETAIL_ENDPOINT
 
+#include <beman/net/detail/native_handle.hpp>
 #include <algorithm>
 #include <cstring>
-#include <sys/socket.h>
 
 // ----------------------------------------------------------------------------
 
@@ -19,12 +19,12 @@ class endpoint;
 class beman::net::detail::endpoint {
   private:
     ::sockaddr_storage d_data{};
-    ::socklen_t        d_size{sizeof(::sockaddr_storage)};
+    ::beman::net::detail::native_socklen_t        d_size{sizeof(::sockaddr_storage)};
 
   public:
     endpoint() = default;
-    endpoint(const void* data, ::socklen_t size) : d_size(size) {
-        ::std::memcpy(&this->d_data, data, ::std::min(size, ::socklen_t(sizeof(::sockaddr_storage))));
+    endpoint(const void* data, ::beman::net::detail::native_socklen_t size) : d_size(size) {
+        ::std::memcpy(&this->d_data, data, ::std::min(size, ::beman::net::detail::native_socklen_t(sizeof(::sockaddr_storage))));
     }
     template <typename ET>
     endpoint(ET& e) : endpoint(e.data(), e.size()) {}
@@ -33,8 +33,8 @@ class beman::net::detail::endpoint {
     auto storage() const -> const ::sockaddr_storage& { return this->d_data; }
     auto data() -> ::sockaddr* { return reinterpret_cast<::sockaddr*>(&this->d_data); }
     auto data() const -> const ::sockaddr* { return reinterpret_cast<const ::sockaddr*>(&this->d_data); }
-    auto size() const -> ::socklen_t { return this->d_size; }
-    auto size() -> ::socklen_t& { return this->d_size; }
+    auto size() const -> ::beman::net::detail::native_socklen_t { return this->d_size; }
+    auto size() -> ::beman::net::detail::native_socklen_t& { return this->d_size; }
 };
 
 // ----------------------------------------------------------------------------

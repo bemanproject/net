@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------
 
 #include <beman/net/detail/netfwd.hpp>
-#include <sys/socket.h>
+#include <beman/net/detail/native_handle.hpp>
 
 // ----------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ class beman::net::socket_base {
             return Name;
         }
         template <typename Protocol>
-        constexpr auto size(Protocol&&) const -> ::socklen_t {
+        constexpr auto size(Protocol&&) const -> ::beman::net::detail::native_socklen_t {
             return sizeof(Value);
         }
     };

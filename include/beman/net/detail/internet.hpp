@@ -5,10 +5,14 @@
 #define INCLUDED_BEMAN_NET_DETAIL_INTERNET
 
 #include <beman/net/detail/netfwd.hpp>
+#include <beman/net/detail/native_handle.hpp>
 #include <beman/net/detail/endpoint.hpp>
+#ifdef _MSC_VER
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/socket.h>
+#endif
 #include <array>
 #include <compare>
 #include <cstdint>
@@ -135,13 +139,13 @@ class beman::net::ip::address_v6 {
 
     constexpr address_v6() noexcept;
     constexpr address_v6(const address_v6&) noexcept = default;
-    constexpr address_v6(const unsigned char (&addr)[16]) noexcept { ::std::memcpy(d_bytes.data(), addr, 16); }
+    address_v6(const unsigned char (&addr)[16]) noexcept { ::std::memcpy(d_bytes.data(), addr, 16); }
 
     auto           operator=(const address_v6&) noexcept -> address_v6& = default;
     constexpr auto operator==(const address_v6&) const -> bool          = default;
     constexpr auto operator<=>(const address_v6&) const -> ::std::strong_ordering;
 
-    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const -> ::socklen_t {
+    auto get_address(::sockaddr_in6& addr, ::beman::net::ip::port_type port) const -> ::beman::net::detail::native_socklen_t {
         addr.sin6_family   = AF_INET6;
         addr.sin6_port     = htons(port);
         addr.sin6_flowinfo = 0;
@@ -216,7 +220,7 @@ class beman::net::ip::address {
         return ::beman::net::ip::address_v4(
             ntohl(reinterpret_cast<const ::sockaddr_in&>(this->d_address.storage).sin_addr.s_addr));
     }
-    constexpr auto to_v6() const -> ::beman::net::ip::address_v6 {
+    auto to_v6() const -> ::beman::net::ip::address_v6 {
         return ::beman::net::ip::address_v6(this->d_address.inet6.sin6_addr.s6_addr);
     }
     constexpr auto is_unspecified() const noexcept -> bool;
@@ -277,7 +281,7 @@ class beman::net::ip::basic_endpoint : public ::beman::net::detail::endpoint {
     }
     auto port(::beman::net::ip::port_type) noexcept -> void;
 
-    auto size() const -> ::socklen_t {
+    auto size() const -> ::beman::net::detail::native_socklen_t {
         return this->storage().ss_family == PF_INET ? sizeof(::sockaddr_in) : sizeof(::sockaddr_in6);
     }
 

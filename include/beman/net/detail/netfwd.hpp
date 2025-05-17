@@ -4,13 +4,21 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_NETFWD
 #define INCLUDED_BEMAN_NET_DETAIL_NETFWD
 
+#ifdef _MSC_VER
+#   define NOMINMAX
+#   include <winsock2.h>
+#endif
 #include <limits>
 #include <cstdint>
 
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
+    #ifdef _MSC_VER
+    using native_handle_type = SOCKET;
+    #else
 enum class native_handle_type: int { invalid = -1 };
+    #endif
 
 enum class socket_id : ::std::uint_least32_t { invalid = ::std::numeric_limits<::std::uint_least32_t>::max() };
 struct context_base;

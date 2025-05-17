@@ -9,6 +9,7 @@
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/event_type.hpp>
 #include <beman/net/detail/sender.hpp>
+#include <concepts>
 
 // ----------------------------------------------------------------------------
 
@@ -106,7 +107,7 @@ struct beman::net::detail::send_desc {
         auto submit(auto* base) -> ::beman::net::detail::submit_result {
             ::std::get<0>(*base).msg_iov    = this->d_buffers.data();
             ::std::get<0>(*base).msg_iovlen = [](auto x) {
-                using iovlen = decltype(msghdr().msg_iovlen);
+                using iovlen = decltype(::beman::net::detail::native_msghdr().msg_iovlen);
                 if constexpr (std::same_as<decltype(x), iovlen>)
                     return x;
                 else
@@ -161,7 +162,7 @@ struct beman::net::detail::receive_desc {
         auto submit(auto* base) -> ::beman::net::detail::submit_result {
             ::std::get<0>(*base).msg_iov    = this->d_buffers.data();
             ::std::get<0>(*base).msg_iovlen = [](auto x) {
-                using iovlen = decltype(msghdr().msg_iovlen);
+                using iovlen = decltype(::beman::net::detail::native_msghdr().msg_iovlen);
                 if constexpr (std::same_as<decltype(x), iovlen>)
                     return x;
                 else
