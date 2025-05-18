@@ -40,22 +40,22 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     };
     using timer_priority_t = ::beman::net::detail::sorted_list<timer_node_t, ::std::less<>, get_time>;
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     WSADATA d_wsaData{};
-    #endif
+#endif
     ::beman::net::detail::container<::beman::net::detail::poll_record> d_sockets;
     ::std::vector<::beman::net::detail::native_poll_record>            d_poll;
     ::std::vector<::beman::net::detail::io_base*>                      d_outstanding;
     timer_priority_t                                                   d_timeouts;
     ::beman::net::detail::context_base::task*                          d_tasks{};
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     poll_context() {
         if (int rs = WSAStartup(MAKEWORD(2, 2), &this->d_wsaData)) {
             throw ::std::runtime_error("WSAStartup failed");
         }
     }
-    #endif
+#endif
 
     auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id override final {
         return this->d_sockets.insert(fd);
