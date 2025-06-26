@@ -185,10 +185,9 @@ struct demo::into_error_t::sender {
     using sender_concept = ex::sender_t;
     template <typename Env>
     auto get_completion_signatures(const Env& env) const {
-        return ::beman::execution::detail::meta::unique<
-            ::beman::execution::detail::meta::transform<demo::detail::into_error_transform<Fun>::template type,
-                                                           decltype(ex::get_completion_signatures(
-                                                               ::std::declval<Sender>(), env))>>();
+        return ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::transform<
+            demo::detail::into_error_transform<Fun>::template type,
+            decltype(ex::get_completion_signatures(::std::declval<Sender>(), env))>>();
     }
 
     template <ex::receiver Receiver>
