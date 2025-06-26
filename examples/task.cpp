@@ -27,7 +27,7 @@ int main(int ac, char*[]) {
             [](int argc) -> demo::task<result> {
                 int i = co_await ex::just(17);
                 std::cout << "i=" << i << "\n";
-                auto [a, b] = co_await ex::just("hello", "world");
+                auto [a, b] = co_await ex::just(std::string_view("hello"), std::string_view("world"));
                 std::cout << "a=" << a << ", b=" << b << "\n";
                 try {
                     co_await ex::just_error(error{17});
