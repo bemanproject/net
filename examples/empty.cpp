@@ -21,9 +21,10 @@ using namespace std::chrono_literals;
 // ----------------------------------------------------------------------------
 
 std::unordered_map<std::string, std::string> files{
-    {"/", "examples/data/index.html"},
+    {"/", "examples/data/index-munich.html"},
     {"/favicon.ico", "examples/data/favicon.ico"},
     {"/logo.png", "examples/data/logo.png"},
+    {"/muc.png", "examples/data/muc.png"},
 };
 
 auto main() -> int {
