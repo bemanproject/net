@@ -9,6 +9,7 @@ set(EXAMPLES
   empty
   http-server
   milano
+  http-munich
   server
   task
 )
