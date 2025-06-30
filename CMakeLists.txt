@@ -16,9 +16,9 @@ set(CMAKE_CXX_STANDARD 23)
 include(FetchContent)
 FetchContent_Declare(
     execution
-    # for local development, use SOURCE_DIR <path-to>/execution
+    # SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 38c7d3f
+    GIT_TAG 49789da
 )
 FetchContent_MakeAvailable(execution)
 
