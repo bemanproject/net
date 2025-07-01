@@ -2,12 +2,16 @@
 
 <img src="https://github.com/bemanproject/beman/blob/main/images/logos/beman_logo-beman_library_under_development.png" style="width:5%; height:auto;">
 
+![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
+![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+
+
 `beman.net` provides senders for asynchronous network operations.
 It is based on [P2762R2](https://wg21.link/P2762R2). Both the proposal
 and the implementation are in an early state although basic
 functionality is provided.
 
-`beman.net` builds on top of [`beman.execution26`](https://github.com/bemanproject/execution26). The
+`beman.net` builds on top of [`beman.execution`](https://github.com/bemanproject/execution). The
 implementation should allow multiple ways how to support asynchronous
 operations although currently the only implemented approach is based
 on `poll(2)`. Implementations using `kqueue(2)`, `epoll(2)`,
@@ -15,7 +19,7 @@ on `poll(2)`. Implementations using `kqueue(2)`, `epoll(2)`,
 possible use various libraries for asynchronous operations like
 `libevent`, `libuv`, etc.
 
-**Implements**: [Sender/Receiver Interface for Networking (P2762R2)](https://wg21.link/P2762R2)
+**Implements**: [Sender/Receiver Interface for Networking (P2762)](https://wg21.link/P2762)
 
 **Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/BEMAN_LIBRARY_MATURITY_MODEL.md#under-development-and-not-yet-ready-for-production-use)
 
