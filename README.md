@@ -4,7 +4,7 @@
 
 ![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
 ![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
-
+[![Coverage](https://coveralls.io/repos/github/bemanproject/net/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/net?branch=main)
 
 `beman.net` provides senders for asynchronous network operations.
 It is based on [P2762R2](https://wg21.link/P2762R2). Both the proposal
