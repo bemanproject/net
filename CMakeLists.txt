@@ -11,14 +11,12 @@ set(TARGET_LIBRARY beman_${TARGET_NAME})
 set(TARGET_ALIAS beman::${TARGET_NAME})
 set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 23)
-
 include(FetchContent)
 FetchContent_Declare(
     execution
     # SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 49789da
+    GIT_TAG fa6d441
 )
 FetchContent_MakeAvailable(execution)
 
