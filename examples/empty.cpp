@@ -28,7 +28,7 @@ std::unordered_map<std::string, std::string> files{
 };
 
 auto main() -> int {
-    net::io_context context;
+    net::io_context        context;
     net::ip::tcp::endpoint ep(net::ip::address_v4::any(), 12345);
     net::ip::tcp::acceptor server(context, ep);
 

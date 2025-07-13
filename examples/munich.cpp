@@ -28,26 +28,21 @@ std::unordered_map<std::string, std::string> files{
 };
 
 auto timeout(ex::scheduler auto scheduler, auto dur, ex::sender auto sender) {
-    return demo::when_any(
-        std::move(sender),
-        net::resume_after(scheduler, dur)
-            | ex::then([]{ return std::size_t(); })
-            //| ex::let_value([]{ return ex::just_stopped(); })
+    return demo::when_any(std::move(sender), net::resume_after(scheduler, dur) | ex::then([] { return std::size_t(); })
+                          //| ex::let_value([]{ return ex::just_stopped(); })
     );
 }
 
-demo::task<> run_client(auto client, auto scheduler)
-{
+demo::task<> run_client(auto client, auto scheduler) {
     std::cout << "new client\n";
     char buffer[10000];
     while (std::size_t n = co_await timeout(scheduler, 3s, net::async_receive(client, net::buffer(buffer)))) {
-        std::string request(buffer, n);
+        std::string        request(buffer, n);
         std::istringstream in(request);
-        std::string method, url, version;
-        if ((in >> method >> url >> version) && method == "GET"
-             && files.contains(url)) {
+        std::string        method, url, version;
+        if ((in >> method >> url >> version) && method == "GET" && files.contains(url)) {
             std::cout << "requesting '" << url << "'\n";
-            std::ifstream fin(files[url]);
+            std::ifstream      fin(files[url]);
             std::ostringstream out;
             out << fin.rdbuf();
             auto data = out.str();
@@ -55,7 +50,8 @@ demo::task<> run_client(auto client, auto scheduler)
             out.str(std::string());
             out << "HTTP/1.1 200\r\n"
                 << "Content-Length: " << data.size() << "\r\n"
-                << "\r\n" << data;
+                << "\r\n"
+                << data;
             auto response = out.str();
             co_await net::async_send(client, net::buffer(response));
         }
@@ -65,19 +61,19 @@ demo::task<> run_client(auto client, auto scheduler)
 
 auto main() -> int {
     std::cout << std::unitbuf;
-    net::io_context context;
+    net::io_context        context;
     net::ip::tcp::endpoint ep(net::ip::address_v4::any(), 12345);
     net::ip::tcp::acceptor server(context, ep);
-    demo::scope scope;
+    demo::scope            scope;
 
-    scope.spawn([](auto& srv, auto& sc, auto sched)->demo::task<> {
+    scope.spawn([](auto& srv, auto& sc, auto sched) -> demo::task<> {
         while (true) {
-            std::cout << "awaiting a connetion\n";
-            auto[client, addr] = co_await net::async_accept(srv);
+            std::cout << "awaiting a connection\n";
+            auto [client, addr] = co_await net::async_accept(srv);
             std::cout << "receiver connection from " << addr << "\n";
             sc.spawn(run_client(std::move(client), sched));
         }
     }(server, scope, context.get_scheduler()));
-    
+
     context.run();
 }
