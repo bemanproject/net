@@ -25,6 +25,13 @@
 #include <beman/net/detail/stop_token.hpp>
 #include <beman/net/detail/timer.hpp>
 
+// TAPS
+
+#include <beman/net/detail/transport_preference.hpp>
+#include <beman/net/detail/preconnection.hpp>
+#include <beman/net/detail/local_endpoint.hpp>
+#include <beman/net/detail/remote_endpoint.hpp>
+
 // ----------------------------------------------------------------------------
 
 #endif

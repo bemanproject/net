@@ -4,6 +4,7 @@
 # cmake-format: on
 
 set(EXAMPLES
+  taps
   client
   cppcon-2024
   empty
