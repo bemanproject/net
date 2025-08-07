@@ -6,30 +6,37 @@
 
 #include <beman/execution/execution.hpp>
 #include <beman/execution/task.hpp>
+#include <beman/net/detail/get_io_handle.hpp>
+#include <beman/net/detail/get_scope_token.hpp>
 #include <beman/net/detail/io_context.hpp>
+#include <beman/net/detail/scope.hpp>
 
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
-struct task_env {
+class task_env {
+  public:
     using error_types = beman::execution::completion_signatures<>;
 
+    auto query(const beman::net::get_io_handle_t&) const noexcept { return this->_handle; }
+    auto query(const beman::net::get_scope_token_t&) const noexcept { return this->_token; }
+
+    task_env(const auto& env) : _handle(beman::net::get_io_handle(env)), _token(beman::net::get_scope_token(env)) {
+        std::cout << "task_env created: " << this << "\n";
+    }
+    task_env(task_env&&) = delete;
+    ~task_env() { std::cout << "task_env destroyed: " << this << "\n"; }
+
+  private:
     beman::net::io_context::handle _handle;
-    auto query(beman::net::get_io_handle_t const&) const noexcept {
-        return this->_handle;
-    }
-
-    task_env(auto const& env)
-        : _handle(beman::net::get_io_handle(env)) {
-    }
-
+    beman::net::scope::token       _token;
 };
 
-template <typename T>
+template <typename T = void>
 using task = beman::execution::task<T, task_env>;
 } // namespace beman::net::detail
 namespace beman::net {
-template <typename T>
+template <typename T = void>
 using task = beman::net::detail::task<T>;
 }
 

@@ -18,6 +18,7 @@
 #include <limits>
 #include <cerrno>
 #include <csignal>
+#include <iostream>
 
 // ----------------------------------------------------------------------------
 
@@ -37,20 +38,34 @@ class beman::net::io_context {
     class executor_type {};
 
     class handle {
-    public:
-        handle(beman::net::io_context* ctxt) : context(ctxt) {}
-        auto get_io_context() const -> beman::net::io_context& {
-            return *this->context;
+      public:
+        explicit handle(beman::net::io_context* ctxt) : context(ctxt) {
+            std::cout << "io_context handle created: " << this << "(" << this->context << ")\n";
         }
+        handle(const handle& other) : context(other.context) {
+            std::cout << "io_context handle copy created: " << this << "(" << this->context << "): other=" << &other
+                      << "\n";
+        }
+        ~handle() { std::cout << "io_context handle destroyed: " << this << "(" << this->context << ")\n"; }
+        auto get_io_context() const -> beman::net::io_context& { return *this->context; }
 
-    private:
+      private:
         beman::net::io_context* context{};
     };
-    auto get_handle() -> handle { return handle(this); }
+    auto get_handle() -> handle {
+        std::cout << "get_handle(" << this << ")\n";
+        return handle(this);
+    }
 
-    io_context() { std::signal(SIGPIPE, SIG_IGN); }
-    io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
+    io_context() {
+        std::signal(SIGPIPE, SIG_IGN);
+        std::cout << "io_context default created: " << this << "\n";
+    }
+    io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {
+        std::cout << "io_context created: " << this << " with context: " << &this->d_context << "\n";
+    }
     io_context(io_context&&) = delete;
+    ~io_context() { std::cout << "io_context destroyed: " << this << "\n"; }
 
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id {
         return this->d_context.make_socket(d, t, p, error);

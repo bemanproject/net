@@ -25,20 +25,19 @@ class beman::net::detail::scope {
     class token;
     class env {
         friend class token;
-        public:
-            auto query(beman::net::get_io_handle_t const&) const noexcept {
-                return this->_scope->_io_context.get_handle();
-            }
-            auto query(beman::execution::get_scheduler_t const&) const noexcept {
-                return this->_scope->_io_context.get_scheduler();
-            }
-            auto query(beman::net::get_scope_token_t const&) const noexcept {
-                return this->_scope->get_token();
-            }
-    
-        private:
-            env(scope* s): _scope(s) {}
-            scope* _scope;
+
+      public:
+        auto query(const beman::net::get_io_handle_t&) const noexcept {
+            return this->_scope->_io_context.get_handle();
+        }
+        auto query(const beman::execution::get_scheduler_t&) const noexcept {
+            return this->_scope->_io_context.get_scheduler();
+        }
+        auto query(const beman::net::get_scope_token_t&) const noexcept { return this->_scope->get_token(); }
+
+      private:
+        env(scope* s) : _scope(s) {}
+        scope* _scope;
     };
     class token {
       public:
@@ -49,8 +48,7 @@ class beman::net::detail::scope {
         template <beman::execution::sender Sender, typename... Env>
         auto wrap(Sender&& sndr, const Env&... ev) const noexcept -> beman::execution::sender auto {
             return this->_counting_token.wrap(
-                beman::execution::write_env(std::forward<Sender>(sndr), env(this->_scope)),
-                ev...);
+                beman::execution::write_env(std::forward<Sender>(sndr), env(this->_scope)), ev...);
         }
 
       private:
@@ -58,7 +56,10 @@ class beman::net::detail::scope {
         beman::execution::counting_scope::token _counting_token;
     };
 
-    auto run() -> auto { return beman::execution::just(); }
+    auto run() -> auto {
+        std::cout << "scope::run()\n";
+        return this->_counting_scope.join();
+    }
 
     auto get_token() -> token { return {this}; }
 
