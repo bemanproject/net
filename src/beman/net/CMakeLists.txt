@@ -56,7 +56,7 @@ install(
   FILE_SET ${TARGET_LIBRARY}_detail_headers
 )
 target_include_directories(${TARGET_LIBRARY} PUBLIC $<INSTALL_INTERFACE:include>)
-target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::execution)
+target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::task)
 
 if(FALSE)
 install(EXPORT ${TARGETS_EXPORT_NAME}

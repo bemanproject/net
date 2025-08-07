@@ -6,7 +6,9 @@
 
 // ----------------------------------------------------------------------------
 
-namespace beman::net::detail {}
+namespace beman::net::detail {
+enum class transport_preference { require, prefer, none, avoid, prohibit };
+}
 
 // ----------------------------------------------------------------------------
 

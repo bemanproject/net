@@ -16,9 +16,16 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG fa6d441
+    GIT_TAG 4a55162
 )
 FetchContent_MakeAvailable(execution)
+FetchContent_Declare(
+    task
+    # SOURCE_DIR <path-to>/task
+    GIT_REPOSITORY https://github.com/bemanproject/task
+    GIT_TAG be2fb72
+)
+FetchContent_MakeAvailable(task)
 
 include(CTest)
 if(BUILD_TESTING)

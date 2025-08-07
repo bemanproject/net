@@ -21,6 +21,11 @@ class beman::net::detail::local_endpoint {
         this->_hostname = hostname;
         return *this;
     }
+    auto ip_address() const -> std::string { return this->_ip_address; }
+    auto with_ip_address(const std::string& ip_address) -> local_endpoint& {
+        this->_ip_address = ip_address;
+        return *this;
+    }
     auto port() const -> std::uint16_t { return this->_port; }
     auto with_port(std::uint16_t port) -> local_endpoint& {
         this->_port = port;
@@ -31,12 +36,6 @@ class beman::net::detail::local_endpoint {
         this->_service = service;
         return *this;
     }
-    auto ip_address() const -> std::string { return this->_ip_address; }
-    auto with_ip_address(const std::string& ip_address) -> local_endpoint& {
-        this->_ip_address = ip_address;
-        return *this;
-    }
-
     auto interface() const -> std::string { return this->_interface; }
     auto with_interface(const std::string& interface) -> local_endpoint& {
         this->_interface = interface;
@@ -45,9 +44,9 @@ class beman::net::detail::local_endpoint {
 
   private:
     std::string   _hostname;
+    std::string   _ip_address{};
     std::uint16_t _port{};
     std::string   _service{};
-    std::string   _ip_address{};
     std::string   _interface;
 };
 

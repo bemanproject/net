@@ -36,6 +36,18 @@ class beman::net::io_context {
     using scheduler_type = ::beman::net::detail::io_context_scheduler;
     class executor_type {};
 
+    class handle {
+    public:
+        handle(beman::net::io_context* ctxt) : context(ctxt) {}
+        auto get_io_context() const -> beman::net::io_context& {
+            return *this->context;
+        }
+
+    private:
+        beman::net::io_context* context{};
+    };
+    auto get_handle() -> handle { return handle(this); }
+
     io_context() { std::signal(SIGPIPE, SIG_IGN); }
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
