@@ -45,7 +45,10 @@ class beman::net::detail::io_context_scheduler {
             state(Receiver&& receiver, ::beman::net::detail::context_base* context)
                 : d_receiver(::std::forward<Receiver>(receiver)), d_context(context) {}
 
-            auto start() & noexcept -> void { this->d_context->schedule(this); }
+            auto start() & noexcept -> void {
+                std::cout << "io_context_scheduler::sender::state start\n";
+                this->d_context->schedule(this);
+            }
             auto complete() -> void override { ::beman::net::detail::ex::set_value(::std::move(this->d_receiver)); }
         };
 

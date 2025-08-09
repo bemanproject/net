@@ -15,10 +15,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
-#include <limits>
 #include <cerrno>
 #include <csignal>
-#include <iostream>
+#include <limits>
+#include <system_error>
 
 // ----------------------------------------------------------------------------
 
@@ -39,33 +39,17 @@ class beman::net::io_context {
 
     class handle {
       public:
-        explicit handle(beman::net::io_context* ctxt) : context(ctxt) {
-            std::cout << "io_context handle created: " << this << "(" << this->context << ")\n";
-        }
-        handle(const handle& other) : context(other.context) {
-            std::cout << "io_context handle copy created: " << this << "(" << this->context << "): other=" << &other
-                      << "\n";
-        }
-        ~handle() { std::cout << "io_context handle destroyed: " << this << "(" << this->context << ")\n"; }
+        explicit handle(beman::net::io_context* ctxt) : context(ctxt) {}
         auto get_io_context() const -> beman::net::io_context& { return *this->context; }
 
       private:
         beman::net::io_context* context{};
     };
-    auto get_handle() -> handle {
-        std::cout << "get_handle(" << this << ")\n";
-        return handle(this);
-    }
+    auto get_handle() -> handle { return handle(this); }
 
-    io_context() {
-        std::signal(SIGPIPE, SIG_IGN);
-        std::cout << "io_context default created: " << this << "\n";
-    }
-    io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {
-        std::cout << "io_context created: " << this << " with context: " << &this->d_context << "\n";
-    }
+    io_context() { std::signal(SIGPIPE, SIG_IGN); }
+    io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
-    ~io_context() { std::cout << "io_context destroyed: " << this << "\n"; }
 
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id {
         return this->d_context.make_socket(d, t, p, error);
@@ -94,6 +78,41 @@ class beman::net::io_context {
     }
     auto get_scheduler() -> scheduler_type { return scheduler_type(&this->d_context); }
 
+    template <beman::execution::receiver Receiver>
+    struct run_one_state {
+        using operation_state_concept = ::beman::execution::operation_state_t;
+
+        beman::net::io_context*         _context;
+        ::std::remove_cvref_t<Receiver> _receiver;
+
+        auto start() & noexcept -> void {
+            try {
+                std::cout << "run_one_state start\n";
+                std::size_t count{this->_context->run_one()};
+                std::cout << "run_one_state started: " << this << " with count: " << count << "\n";
+                ::beman::execution::set_value(::std::move(this->_receiver), count);
+                std::cout << "run_one_state set_value called\n";
+            } catch (...) {
+                std::cout << "run_one_state exception caught\n";
+            }
+        }
+    };
+
+    struct run_one_sender {
+        using sender_concept = ::beman::execution::sender_t;
+        using completion_signatures =
+            ::beman::execution::completion_signatures<::beman::execution::set_value_t(std::size_t),
+                                                      ::beman::execution::set_stopped_t()>;
+
+        beman::net::io_context* _context;
+        template <beman::execution::receiver Receiver>
+        auto connect(Receiver&& receiver) {
+            return run_one_state<Receiver>{this->_context, ::std::forward<Receiver>(receiver)};
+        }
+    };
+
+    auto          async_run_one() { return run_one_sender{this}; }
+    auto          async_run() { return this->async_run_one(); }
     ::std::size_t run_one() { return this->d_context.run_one(); }
     ::std::size_t run() {
         ::std::size_t count{};

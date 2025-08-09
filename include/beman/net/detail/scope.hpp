@@ -57,8 +57,7 @@ class beman::net::detail::scope {
     };
 
     auto run() -> auto {
-        std::cout << "scope::run()\n";
-        return this->_counting_scope.join();
+        return beman::execution::when_all(this->_counting_scope.join(), this->_io_context.async_run());
     }
 
     auto get_token() -> token { return {this}; }

@@ -19,20 +19,33 @@ int main(int, char*[]) {
     std::cout << "spawning\n";
     ex::spawn(
         []() -> net::task<> {
-            net::preconnection pre(net::remote_endpoint().with_hostname("example.com").with_port(80));
-            std::cout << "initiate\n";
-            auto        socket{co_await net::initiate(pre)};
-            std::string request = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
-            std::cout << "async_send\n";
-            co_await net::async_send(socket, net::buffer(request));
+            try {
+                net::preconnection pre(net::remote_endpoint().with_hostname("example.com").with_port(80));
+                std::cout << "starting initiate\n";
+                auto exp{co_await (net::initiate(pre) | net::detail::into_expected)};
+                std::cout << "initiate done\n";
+                if (!exp) {
+                    std::cout << "initiate failed: " << exp.error().message() << "\n";
+                    co_yield ex::with_error(exp.error());
+                }
+                auto socket{std::move(std::get<0>(exp.value()))};
 
-            char buffer[1024];
-            std::cout << "reading\n";
-            for (std::size_t n; (n = co_await net::async_receive(socket, net::buffer(buffer)));) {
-                std::cout << "read n=" << n << "\n";
-                std::cout.write(buffer, n);
+                std::string request = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+                std::cout << "async_send\n";
+                co_await net::async_send(socket, net::buffer(request));
+
+                char buffer[1024];
+                std::cout << "reading\n";
+                for (std::size_t n; (n = co_await net::async_receive(socket, net::buffer(buffer)));) {
+                    std::cout << "read n=" << n << "\n";
+                    std::cout.write(buffer, n);
+                }
+            } catch (...) {
+                std::cout << "exception!\n";
             }
-        }(),
+        }() | ex::upon_error([](const std::error_code& e) noexcept {
+                    std::cout << "Error: " << e.message() << "\n";
+                }) | ex::then([]() noexcept { std::cout << "running connection DONE!\n"; }),
         scope.get_token());
 
     std::cout << "spawned\n";
