@@ -14,7 +14,7 @@ set(EXAMPLES
     server
     task
 )
-set(EXAMPLES taps)
+set(xEXAMPLES taps)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET ${TARGET_PREFIX}.examples.${EXAMPLE})
