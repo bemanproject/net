@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # cmake-format: on
 
-list(APPEND tests
-    sorted_list.pass
-)
+list(APPEND tests sorted_list.pass)
 
 foreach(test ${tests})
     add_executable(${test} ${test}.cpp)

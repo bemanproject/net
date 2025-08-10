@@ -43,7 +43,7 @@ auto main() -> int {
 
     scope.spawn(std::invoke(
         [](auto& ctxt, auto stp) -> demo::task<> {
-            on_exit msg("timer task (enqueing stop task) - done");
+            on_exit msg("timer task (enqueuing stop task) - done");
             co_await net::resume_after(ctxt.get_scheduler(), 1s);
             stp();
         },

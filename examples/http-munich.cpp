@@ -28,26 +28,22 @@ std::unordered_map<std::string, std::string> files{
 };
 
 auto timeout(auto scheduler, auto&& dur, auto&& sender) {
-    return demo::when_any(
-        std::forward<decltype(sender)>(sender),
-        net::resume_after(scheduler, dur) | ex::then([]{ return std::size_t(0); })
-    );
+    return demo::when_any(std::forward<decltype(sender)>(sender),
+                          net::resume_after(scheduler, dur) | ex::then([] { return std::size_t(0); }));
 }
 
 demo::task<> run_client(auto scheduler, auto stream) {
     std::cout << "started client\n";
     char buffer[1000];
-    while (std::size_t n = co_await 
-        timeout(scheduler, 3s, net::async_receive(stream, net::buffer(buffer)))
-        ) {
+    while (std::size_t n = co_await timeout(scheduler, 3s, net::async_receive(stream, net::buffer(buffer)))) {
         std::string request(buffer, n);
-        //std::cout << "received='" << request << "'\n";
+        // std::cout << "received='" << request << "'\n";
         std::istringstream in(request);
-        std::string method, url, version;
+        std::string        method, url, version;
         if ((in >> method >> url >> version) && method == "GET" && files.contains(url)) {
-            //std::cout << "requesting url='" << url << "'\n";
-            std::ifstream in(files[url], std::ios::binary);
-            std::ostringstream out; 
+            // std::cout << "requesting url='" << url << "'\n";
+            std::ifstream      in(files[url], std::ios::binary);
+            std::ostringstream out;
             out << in.rdbuf();
             std::string data(out.str());
 
@@ -66,15 +62,15 @@ demo::task<> run_client(auto scheduler, auto stream) {
 
 auto main() -> int {
     std::cout << std::unitbuf;
-    net::io_context context{};
+    net::io_context        context{};
     net::ip::tcp::endpoint ep(net::ip::address_v4::any(), 12345);
     net::ip::tcp::acceptor server(context, ep);
-    demo::scope scope;
+    demo::scope            scope;
 
-    scope.spawn([](auto& srv, auto& sc, auto scheduler)->demo::task<>{
+    scope.spawn([](auto& srv, auto& sc, auto scheduler) -> demo::task<> {
         while (true) {
             std::cout << "ready to receive a client\n";
-            auto[client, addr] = co_await net::async_accept(srv);
+            auto [client, addr] = co_await net::async_accept(srv);
             std::cout << "received connection from " << addr << "\n";
             sc.spawn(run_client(scheduler, std::move(client)));
         }
