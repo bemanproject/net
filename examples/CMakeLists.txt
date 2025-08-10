@@ -4,20 +4,20 @@
 # cmake-format: on
 
 set(EXAMPLES
-  client
-  cppcon-2024
-  empty
-  http-server
-  milano
-  http-munich
-  server
-  task
+    client
+    cppcon-2024
+    empty
+    http-server
+    milano
+    http-munich
+    server
+    task
 )
 
 foreach(EXAMPLE ${EXAMPLES})
-  set(EXAMPLE_TARGET ${TARGET_PREFIX}.examples.${EXAMPLE})
-  add_executable(${EXAMPLE_TARGET})
-  target_sources(${EXAMPLE_TARGET} PRIVATE ${EXAMPLE}.cpp)
-  target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${TARGET_LIBRARY})
-  target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::execution)
+    set(EXAMPLE_TARGET ${TARGET_PREFIX}.examples.${EXAMPLE})
+    add_executable(${EXAMPLE_TARGET})
+    target_sources(${EXAMPLE_TARGET} PRIVATE ${EXAMPLE}.cpp)
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${TARGET_LIBRARY})
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::execution)
 endforeach()

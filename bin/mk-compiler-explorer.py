@@ -74,7 +74,7 @@ def build_header(file, to, header):
             for new in dependencies[todo[0]]:
                 todo.append(new)
         todo = todo[1:]
-    
+
     while 0 < len(deps):
         empty = [item for item in deps.keys() if 0 == len(deps[item])]
         for e in empty:

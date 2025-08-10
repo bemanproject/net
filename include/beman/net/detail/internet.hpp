@@ -261,7 +261,7 @@ class beman::net::ip::basic_endpoint : public ::beman::net::detail::endpoint {
             return ::beman::net::ip::address_v4(
                 ntohl(reinterpret_cast<const ::sockaddr_in&>(this->storage()).sin_addr.s_addr));
             //-dk:TODO case PF_INET6: return ::beman::net::ip::address_v6(reinterpret_cast<::sockaddr_in6
-            //const&>(this->storage()).sin6_addr.s_addr);
+            // const&>(this->storage()).sin6_addr.s_addr);
         }
     }
     auto           address(const ::beman::net::ip::address&) noexcept -> void;
