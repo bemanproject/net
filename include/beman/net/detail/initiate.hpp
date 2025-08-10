@@ -23,8 +23,9 @@ class initiate_t {
   public:
     auto operator()(const preconnection& pre) const -> beman::net::task<beman::net::ip::tcp::socket> {
         //-dk:TODO use the destination endpoint from the preconnection
-        beman::net::ip::tcp::endpoint ep(net::ip::address_v4::loopback(), pre.local().port());
-        beman::net::ip::tcp::socket   client(
+        beman::net::ip::tcp::endpoint ep(net::ip::address_v4::loopback(), pre.remote().port());
+        // beman::net::ip::tcp::endpoint ep(net::ip::address_v4(0x9d'e6'43'b3), 80);
+        beman::net::ip::tcp::socket client(
             (co_await beman::execution::read_env(beman::net::get_io_handle)).get_io_context(), ep);
 
         auto exp{co_await (beman::net::async_connect(client) | beman::net::detail::into_expected |

@@ -31,6 +31,7 @@ class beman::net::detail::preconnection {
     }
 
     auto local() const noexcept -> const local_endpoint& { return this->_local; }
+    auto remote() const noexcept -> const remote_endpoint& { return this->_remote; }
 
   private:
     remote_endpoint _remote;

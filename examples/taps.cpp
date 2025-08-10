@@ -20,7 +20,7 @@ int main(int, char*[]) {
     ex::spawn(
         []() -> net::task<> {
             try {
-                net::preconnection pre(net::remote_endpoint().with_hostname("example.com").with_port(80));
+                net::preconnection pre(net::remote_endpoint().with_hostname("localhost").with_port(12345));
                 auto               exp{co_await (net::initiate(pre) | net::detail::into_expected)};
                 if (!exp) {
                     std::cout << "initiate failed: " << exp.error().message() << "\n";

@@ -23,7 +23,7 @@ FetchContent_Declare(
     task
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
-    GIT_TAG 08ce0ca
+    GIT_TAG 0495d7f
 )
 FetchContent_MakeAvailable(task)
 
