@@ -7,14 +7,62 @@
 #include <beman/execution/execution.hpp>
 #include <concepts>
 #include <expected>
+#include <variant>
 #include <type_traits>
 
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
+
+#if 202202 <= __cpp_lib_expected
+template <typename T, typename E>
+using expected = std::expected<T, E>;
+template <typename T>
+using unexpected = std::unexpected<T>;
+#else
+template <typename T>
+class unexpected {
+  public:
+    template <typename F>
+    explicit unexpected(F&& f) noexcept : _error(std::forward<F>(f)) {}
+    auto error() const& noexcept -> const T& { return this->_error; }
+    auto error() && noexcept -> T&& { return std::move(this->_error); }
+
+  private:
+    std::remove_cvref_t<T> _error;
+};
+template <typename T>
+unexpected(T&&) -> unexpected<std::remove_cvref_t<T>>;
+
+template <typename T, typename E>
+class expected {
+  public:
+    template <typename F>
+    explicit expected(::beman::net::detail::unexpected<F>&& e) noexcept
+        : _value(std::in_place_index<1>, std::move(e).error()) {}
+    template <typename F>
+    explicit expected(const ::beman::net::detail::unexpected<F>& e) noexcept
+        : _value(std::in_place_index<1>, e.error()) {}
+    template <typename... S>
+    explicit expected(S&&... s) noexcept : _value(std::in_place_index<0>, std::forward<S>(s)...) {}
+
+    explicit operator bool() const noexcept { return this->_value.index() == 0; }
+    const T& value() const& { return std::get<0>(this->_value); }
+    const E& error() const& { return std::get<1>(this->_value); }
+    T&       value() & { return std::get<0>(this->_value); }
+    E&       error() & { return std::get<1>(this->_value); }
+    T&&      value() && { return std::get<0>(std::move(this->_value)); }
+    E&&      error() && { return std::get<1>(std::move(this->_value)); }
+
+  private:
+    std::variant<std::remove_cvref_t<T>, std::remove_cvref_t<E>> _value;
+};
+#endif
+
 struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_t> {
     template <typename Sender, typename Env>
-    using expected_t = std::expected<beman::execution::value_types_of_t<Sender, Env, std::tuple, std::type_identity_t>,
+    using expected_t =
+        beman::net::detail::expected<beman::execution::value_types_of_t<Sender, Env, std::tuple, std::type_identity_t>,
                                      beman::execution::error_types_of_t<Sender, Env, std::type_identity_t>>;
 
     template <beman::execution::sender Sender, beman::execution::receiver Receiver>
@@ -31,8 +79,10 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
             }
             template <typename Error>
             auto set_error(Error&& error) && noexcept {
-                beman::execution::set_value(std::move(*this->_receiver),
-                                            expected_t<Sender, env_t>(std::unexpected(std::forward<Error>(error))));
+                beman::execution::set_value(
+                    std::move(*this->_receiver),
+                    expected_t<Sender, env_t>(
+                        beman::net::detail::unexpected<std::remove_cvref_t<Error>>(std::forward<Error>(error))));
             }
             auto set_stopped() && noexcept { beman::execution::set_stopped(std::move(*this->_receiver)); }
         };
