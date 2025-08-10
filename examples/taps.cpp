@@ -21,9 +21,7 @@ int main(int, char*[]) {
         []() -> net::task<> {
             try {
                 net::preconnection pre(net::remote_endpoint().with_hostname("example.com").with_port(80));
-                std::cout << "starting initiate\n";
-                auto exp{co_await (net::initiate(pre) | net::detail::into_expected)};
-                std::cout << "initiate done\n";
+                auto               exp{co_await (net::initiate(pre) | net::detail::into_expected)};
                 if (!exp) {
                     std::cout << "initiate failed: " << exp.error().message() << "\n";
                     co_yield ex::with_error(exp.error());

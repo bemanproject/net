@@ -26,20 +26,15 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
             auto      get_env() const noexcept { return beman::execution::get_env(*this->_receiver); }
             template <typename... Args>
             auto set_value(Args&&... args) && noexcept {
-                std::cout << "into_expected: success\n";
                 beman::execution::set_value(std::move(*this->_receiver),
                                             expected_t<Sender, env_t>(std::forward<Args>(args)...));
             }
             template <typename Error>
             auto set_error(Error&& error) && noexcept {
-                std::cout << "into_expected: failure\n";
                 beman::execution::set_value(std::move(*this->_receiver),
                                             expected_t<Sender, env_t>(std::unexpected(std::forward<Error>(error))));
             }
-            auto set_stopped() && noexcept {
-                std::cout << "into_expected: cancel\n";
-                beman::execution::set_stopped(std::move(*this->_receiver));
-            }
+            auto set_stopped() && noexcept { beman::execution::set_stopped(std::move(*this->_receiver)); }
         };
         using operation_state_concept = beman::execution::operation_state_t;
         using inner_state_t           = beman::execution::connect_result_t<Sender, receiver>;

@@ -7,10 +7,13 @@
 // ----------------------------------------------------------------------------
 
 #include <beman/net/detail/netfwd.hpp>
+#include <beman/net/detail/container.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/io_context_scheduler.hpp>
 #include <beman/net/detail/poll_context.hpp>
-#include <beman/net/detail/container.hpp>
+#include <beman/net/detail/repeat_effect_until.hpp>
+#include <beman/execution/execution.hpp>
+
 #include <cstdint>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -85,14 +88,14 @@ class beman::net::io_context {
         beman::net::io_context*         _context;
         ::std::remove_cvref_t<Receiver> _receiver;
 
+        run_one_state(beman::net::io_context* context, Receiver&& receiver) noexcept
+            : _context(context), _receiver(::std::forward<Receiver>(receiver)) {}
+        run_one_state(run_one_state&&) = delete;
         auto start() & noexcept -> void {
             try {
-                std::cout << "run_one_state start\n";
-                std::size_t count{this->_context->run_one()};
-                std::cout << "run_one_state started: " << this << " with count: " << count << "\n";
-                ::beman::execution::set_value(::std::move(this->_receiver), count);
-                std::cout << "run_one_state set_value called\n";
+                ::beman::execution::set_value(::std::move(this->_receiver), this->_context->run_one());
             } catch (...) {
+                //-dk:TODO deal with exceptions in async_run_one
                 std::cout << "run_one_state exception caught\n";
             }
         }
@@ -107,12 +110,20 @@ class beman::net::io_context {
         beman::net::io_context* _context;
         template <beman::execution::receiver Receiver>
         auto connect(Receiver&& receiver) {
-            return run_one_state<Receiver>{this->_context, ::std::forward<Receiver>(receiver)};
+            return run_one_state<Receiver>(this->_context, ::std::forward<Receiver>(receiver));
         }
     };
 
-    auto          async_run_one() { return run_one_sender{this}; }
-    auto          async_run() { return this->async_run_one(); }
+    auto async_run_one() { return run_one_sender{this}; }
+    auto async_run() {
+        return beman::execution::let_value(beman::execution::just(), [this, last_count = std::size_t(1)]() mutable {
+            return beman::net::repeat_effect_until(
+                beman::execution::just(),
+                [this] { return this->async_run_one(); }() |
+                    beman::execution::then([&last_count](std::size_t count) { last_count = count; }),
+                [&last_count] { return last_count == 0; });
+        });
+    }
     ::std::size_t run_one() { return this->d_context.run_one(); }
     ::std::size_t run() {
         ::std::size_t count{};

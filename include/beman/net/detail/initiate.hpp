@@ -28,16 +28,10 @@ class initiate_t {
             (co_await beman::execution::read_env(beman::net::get_io_handle)).get_io_context(), ep);
 
         auto exp{co_await (beman::net::async_connect(client) | beman::net::detail::into_expected |
-                           beman::execution::then([](auto&& e) {
-                               std::cout << "connect completed\n";
-                               return std::move(e);
-                           }))};
-        std::cout << "connect completed\n";
+                           beman::execution::then([](auto&& e) { return std::move(e); }))};
         if (!exp) {
-            std::cout << "initiate failed: " << exp.error().message() << "\n";
             co_yield beman::execution::with_error(exp.error());
         }
-        std::cout << "initiate succeeded\n";
         co_return std::move(client);
     }
 };
