@@ -117,6 +117,7 @@ class beman::net::io_context {
     auto async_run_one() { return run_one_sender{this}; }
     auto async_run() {
         return beman::execution::let_value(beman::execution::just(), [this, last_count = std::size_t(1)]() mutable {
+            (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being unused
             return beman::net::repeat_effect_until(
                 beman::execution::just(),
                 [this] { return this->async_run_one(); }() |

@@ -6,7 +6,9 @@
 
 #include <beman/execution/execution.hpp>
 #include <concepts>
+#if 202202 <= __cpp_lib_expected
 #include <expected>
+#endif
 #include <variant>
 #include <type_traits>
 
