@@ -1,0 +1,52 @@
+// examples/taps.cpp                                                  -*-C++-*-
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#include <beman/execution/execution.hpp>
+#include <beman/net/net.hpp>
+#include <iostream>
+#include <system_error>
+#include <string>
+
+namespace ex  = beman::execution;
+namespace net = beman::net;
+
+// ----------------------------------------------------------------------------
+
+int main(int, char*[]) {
+    std::cout << std::unitbuf;
+    net::scope scope;
+
+    std::cout << "spawning\n";
+    ex::spawn(
+        []() -> net::task<> {
+            try {
+                net::preconnection pre(net::remote_endpoint().with_hostname("localhost").with_port(12345));
+                auto               exp{co_await (net::initiate(pre) | net::detail::into_expected)};
+                if (!exp) {
+                    std::cout << "initiate failed: " << exp.error().message() << "\n";
+                    co_yield ex::with_error(exp.error());
+                }
+                auto socket{std::move(std::get<0>(exp.value()))};
+
+                std::string request = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+                std::cout << "async_send\n";
+                co_await net::async_send(socket, net::buffer(request));
+
+                char buffer[1024];
+                std::cout << "reading\n";
+                for (std::size_t n; (n = co_await net::async_receive(socket, net::buffer(buffer)));) {
+                    std::cout << "read n=" << n << "\n";
+                    std::cout.write(buffer, n);
+                }
+            } catch (...) {
+                std::cout << "exception!\n";
+            }
+        }() | ex::upon_error([](const std::error_code& e) noexcept {
+                    std::cout << "Error: " << e.message() << "\n";
+                }) | ex::then([]() noexcept { std::cout << "running connection DONE!\n"; }),
+        scope.get_token());
+
+    std::cout << "spawned\n";
+
+    ex::sync_wait(scope.run());
+}

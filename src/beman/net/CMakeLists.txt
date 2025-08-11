@@ -64,7 +64,7 @@ target_include_directories(
     ${TARGET_LIBRARY}
     PUBLIC $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::execution)
+target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::task)
 
 if(FALSE)
     install(

@@ -14,11 +14,18 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME})
 include(FetchContent)
 FetchContent_Declare(
     execution
-    # SOURCE_DIR <path-to>/execution
+    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG fa6d441
+    GIT_TAG e43fc56
 )
 FetchContent_MakeAvailable(execution)
+FetchContent_Declare(
+    task
+    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
+    GIT_REPOSITORY https://github.com/bemanproject/task
+    GIT_TAG 0495d7f
+)
+FetchContent_MakeAvailable(task)
 
 include(CTest)
 if(BUILD_TESTING)
