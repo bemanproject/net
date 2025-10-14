@@ -29,6 +29,4 @@ std::unordered_map<std::string, std::string> files{
     {"/warwick-qr2.png", "examples/data/warwick-qr2.png"},
 };
 
-
-auto main() -> int {
-}
+auto main() -> int {}
