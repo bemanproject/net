@@ -16,14 +16,14 @@ FetchContent_Declare(
     execution
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG e43fc56
+    GIT_TAG c587808
 )
 FetchContent_MakeAvailable(execution)
 FetchContent_Declare(
     task
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
-    GIT_TAG 0495d7f
+    GIT_TAG 74aa210
 )
 FetchContent_MakeAvailable(task)
 

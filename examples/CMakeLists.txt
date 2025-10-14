@@ -4,6 +4,7 @@
 # cmake-format: on
 
 set(EXAMPLES
+    http-warwick
     taps
     client
     cppcon-2024
