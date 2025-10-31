@@ -66,6 +66,12 @@ target_include_directories(
 )
 target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::task)
 
+if(BEMAN_NET_WITH_URING)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(uring REQUIRED IMPORTED_TARGET liburing)
+    target_link_libraries(${TARGET_LIBRARY} PUBLIC PkgConfig::uring)
+endif()
+
 if(FALSE)
     install(
         EXPORT ${TARGETS_EXPORT_NAME}

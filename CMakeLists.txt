@@ -11,6 +11,8 @@ set(TARGET_LIBRARY beman_${TARGET_NAME})
 set(TARGET_ALIAS beman::${TARGET_NAME})
 set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME})
 
+option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
+
 include(FetchContent)
 FetchContent_Declare(
     execution
