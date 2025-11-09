@@ -40,6 +40,7 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/sorted_list.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/stop_token.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/timer.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/uring_context.hpp
 )
 get_property(
     DETAIL_HEADER_FILES
