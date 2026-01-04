@@ -184,8 +184,12 @@ struct task {
                 state->callback.reset();
                 state->handle->stop_state = task::stop_state::stopping;
                 state->handle->stop_source.request_stop();
-                if (state->handle->stop_state == task::stop_state::stopped)
+                if (state->handle->stop_state == task::stop_state::stopped) {
                     this->object->handle->state->complete_stopped();
+                } else {
+                    // transition back to running so sender_awaiter::stop() can safely complete later
+                    state->handle->stop_state = task::stop_state::running;
+                }
             }
         };
         using stop_token    = decltype(ex::get_stop_token(ex::get_env(::std::declval<Receiver>())));

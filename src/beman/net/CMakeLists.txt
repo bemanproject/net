@@ -40,6 +40,7 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/sorted_list.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/stop_token.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/timer.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/uring_context.hpp
 )
 get_property(
     DETAIL_HEADER_FILES
@@ -65,6 +66,12 @@ target_include_directories(
     PUBLIC $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::task)
+
+if(BEMAN_NET_WITH_URING)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(uring REQUIRED IMPORTED_TARGET liburing)
+    target_link_libraries(${TARGET_LIBRARY} PUBLIC PkgConfig::uring)
+endif()
 
 if(FALSE)
     install(
