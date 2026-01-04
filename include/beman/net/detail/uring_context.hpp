@@ -138,28 +138,30 @@ struct uring_context final : context_base {
         // read the next completion, waiting if necessary
         auto [res, completion] = wait();
 
-        if (completion) {
-            // work() functions depend on res, so pass it in via 'extra'
-            completion->extra.reset(&res);
-            completion->work(*this, completion);
-        }
+        // work() functions depend on res, so pass it in via 'extra'
+        completion->extra.reset(&res);
+        completion->work(*this, completion);
 
         return 1;
     }
 
     auto cancel(io_base* cancel_op, io_base* op) -> void override {
-        auto sqe   = get_sqe(nullptr);
+        cancel_op->work = [](context_base& ctx, io_base* io) {
+            auto res = *static_cast<int*>(io->extra.get());
+            if (res == -ENOENT || res == -EALREADY) { // op already completed
+                io->cancel();
+                return submit_result::ready;
+            } else if (res < 0) {
+                io->error(::std::error_code(-res, ::std::system_category()));
+                return submit_result::error;
+            }
+            io->complete();
+            return submit_result::ready;
+        };
+
+        auto sqe   = get_sqe(cancel_op);
         int  flags = 0;
         ::io_uring_prep_cancel(sqe, op, flags);
-
-        // use io_uring_prep_cancel() for asynchronous cancellation of op.
-        // cancel_op, aka sender_state::cancel_callback, lives inside of op's
-        // operation state. op's completion may race with this cancellation,
-        // causing that sender_state and its cancel_callback to be destroyed.
-        // so we can't pass cancel_op to io_uring_sqe_set_data() and attach a
-        // cancel_op->work() function to handle its completion in run_one().
-        // instead, we just complete it here without waiting for the result
-        cancel_op->complete();
     }
 
     auto schedule(task* t) -> void override {
