@@ -80,7 +80,6 @@ struct uring_context final : context_base {
         }
         assert(submitting >= r);
         submitting -= r;
-        outstanding += r;
     }
 
     auto get_sqe(io_base* completion) -> ::io_uring_sqe* {
@@ -92,6 +91,7 @@ struct uring_context final : context_base {
         }
         ::io_uring_sqe_set_data(sqe, completion);
         ++submitting;
+        ++outstanding;
         return sqe;
     }
 
@@ -128,7 +128,6 @@ struct uring_context final : context_base {
             }
             assert(submitting >= r);
             submitting -= r;
-            outstanding += r;
         }
 
         if (!outstanding) {
