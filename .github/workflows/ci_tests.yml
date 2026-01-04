@@ -88,7 +88,7 @@ jobs:
                 }
               ]
             },
-            { "versions": ["19", "18"],
+            { "versions": ["19"],
               "tests": [
                 { "cxxversions": ["c++26", "c++23", "c++20"],
                   "tests": [
@@ -97,7 +97,7 @@ jobs:
                 }
               ]
             },
-            { "versions": ["17"],
+            { "versions": ["18", "17"],
               "tests": [
                 { "cxxversions": ["c++26", "c++23", "c++20"],
                   "tests": [{"stdlibs": ["libc++"], "tests": ["Release.Default"]}]
