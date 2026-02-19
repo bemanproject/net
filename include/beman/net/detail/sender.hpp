@@ -113,14 +113,14 @@ struct beman::net::detail::sender_state : Desc::operation, ::beman::net::detail:
         }
     }
     auto complete() -> void override final {
-        d_callback.reset();
         if (0 == --this->d_outstanding) {
+            d_callback.reset();
             this->d_data.set_value(*this, ::std::move(this->d_receiver));
         }
     }
     auto error(::std::error_code err) -> void override final {
-        d_callback.reset();
         if (0 == --this->d_outstanding) {
+            d_callback.reset();
             ::beman::net::detail::ex::set_error(::std::move(this->d_receiver), std::move(err));
         }
     }
