@@ -3,81 +3,65 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # cmake-format: on
 
-add_library(${TARGET_LIBRARY} STATIC)
-add_library(${TARGET_ALIAS} ALIAS ${TARGET_LIBRARY})
+add_library(${PROJECT_NAME}_headers INTERFACE)
+add_library(beman::net_headers ALIAS ${PROJECT_NAME}_headers)
 
 target_sources(
-    ${TARGET_LIBRARY}
-    PRIVATE net.cpp
+    ${PROJECT_NAME}_headers
+    # XXX PRIVATE net.cpp
     PUBLIC
-        FILE_SET ${TARGET_LIBRARY}_public_headers
+        FILE_SET public_headers
             TYPE HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-            FILES ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/net.hpp
+            FILES ${PROJECT_SOURCE_DIR}/include/beman/net/net.hpp
     PUBLIC
-        FILE_SET ${TARGET_LIBRARY}_detail_headers
+        FILE_SET detail_headers
             TYPE HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/basic_socket.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/basic_socket_acceptor.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/basic_stream_socket.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/buffer.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/container.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/context_base.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/endpoint.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/execution.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/internet.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/io_base.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/io_context.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/io_context_scheduler.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/netfwd.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/operations.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/poll_context.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/sender.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/socket_base.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/socket_category.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/sorted_list.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/stop_token.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/timer.hpp
-                ${PROJECT_SOURCE_DIR}/include/beman/${TARGET_NAME}/detail/uring_context.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/basic_socket.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/basic_socket_acceptor.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/basic_stream_socket.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/buffer.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/container.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/context_base.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/endpoint.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/execution.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/internet.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/io_base.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/io_context.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/io_context_scheduler.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/netfwd.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/operations.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/poll_context.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/sender.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/socket_base.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/socket_category.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/sorted_list.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/stop_token.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/timer.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/uring_context.hpp
 )
+
 get_property(
     DETAIL_HEADER_FILES
-    TARGET ${TARGET_LIBRARY}
-    PROPERTY HEADER_SET_${TARGET_LIBRARY}_detail_headers
+    TARGET ${PROJECT_NAME}_headers
+    PROPERTY HEADER_SET_detail_headers
 )
 source_group("Header Files\\detail" FILES ${DETAIL_HEADER_FILES})
 
-include(GNUInstallDirs)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-string(TOLOWER ${CMAKE_PROJECT_NAME} CMAKE_LOWER_PROJECT_NAME)
-
-install(
-    TARGETS ${TARGET_LIBRARY}
-    EXPORT ${TARGETS_EXPORT_NAME}
-    ARCHIVE DESTINATION lib/$<CONFIG>
-    FILE_SET ${TARGET_LIBRARY}_public_headers
-    FILE_SET ${TARGET_LIBRARY}_detail_headers
+target_link_libraries(${PROJECT_NAME}_headers INTERFACE beman::task_headers)
+set_target_properties(
+    ${PROJECT_NAME}_headers
+    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON
 )
-target_include_directories(
-    ${TARGET_LIBRARY}
-    PUBLIC $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(${TARGET_LIBRARY} PUBLIC beman::task)
 
-if(BEMAN_NET_WITH_URING)
+if(LINUX AND BEMAN_NET_WITH_URING)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(uring REQUIRED IMPORTED_TARGET liburing)
-    target_link_libraries(${TARGET_LIBRARY} PUBLIC PkgConfig::uring)
-endif()
-
-if(FALSE)
-    install(
-        EXPORT ${TARGETS_EXPORT_NAME}
-        FILE ${TARGET_LIBRARY}-config.cmake
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${TARGET_LIBRARY}"
-        NAMESPACE ${TARGET_LIBRARY}::
+    target_link_libraries(${PROJECT_NAME}_headers INTERFACE PkgConfig::uring)
+    target_compile_definitions(
+        ${PROJECT_NAME}_headers
+        INTERFACE BEMAN_NET_USE_URING
     )
 endif()
