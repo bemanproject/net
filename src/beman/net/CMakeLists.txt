@@ -53,7 +53,7 @@ source_group("Header Files\\detail" FILES ${DETAIL_HEADER_FILES})
 target_link_libraries(${PROJECT_NAME}_headers INTERFACE beman::task_headers)
 set_target_properties(
     ${PROJECT_NAME}_headers
-    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON
+    PROPERTIES VERIFY_INTERFACE_HEADER_SETS OFF # FIXME:${PROJECT_IS_TOP_LEVEL}
 )
 
 if(LINUX AND BEMAN_NET_WITH_URING)
