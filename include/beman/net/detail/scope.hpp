@@ -43,8 +43,7 @@ class beman::net::detail::scope {
       public:
         token(scope* s) : _scope(s), _counting_token(s->_counting_scope.get_token()) {}
 
-        auto try_associate() noexcept -> bool { return this->_counting_token.try_associate(); }
-        auto disassociate() noexcept -> void { this->_counting_token.disassociate(); }
+        auto try_associate() const noexcept -> auto { return this->_counting_token.try_associate(); }
         template <beman::execution::sender Sender, typename... Env>
         auto wrap(Sender&& sndr, const Env&... ev) const noexcept -> beman::execution::sender auto {
             return this->_counting_token.wrap(

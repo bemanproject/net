@@ -209,17 +209,19 @@ inline auto demo::into_error_t::operator()(Sender&& sndr, Fun&& fun) const
 
 template <typename Fun>
 inline auto demo::into_error_t::operator()(Fun&& fun) const {
-    return ex::detail::sender_adaptor{*this, fun};
+    return ex::detail::make_sender_adaptor(*this, fun);
 }
 
 // ----------------------------------------------------------------------------
 
 #if 202202L <= __cpp_lib_expected
-inline auto demo::into_expected_t::operator()() const { return beman::net::detail::ex::detail::sender_adaptor{*this}; }
+inline auto demo::into_expected_t::operator()() const {
+    return beman::net::detail::ex::detail::make_sender_adaptor(*this);
+}
 template <beman::net::detail::ex::sender Sender>
 inline auto demo::into_expected_t::operator()(Sender&& s) const {
     using value_type =
-        ex::value_types_of_t<Sender, ex::empty_env, demo::detail::decayed_tuple_or_single_t, std::type_identity_t>;
+        ex::value_types_of_t<Sender, ex::env<>, demo::detail::decayed_tuple_or_single_t, std::type_identity_t>;
     using error_type = ex::error_types_of_t<Sender>;
     return ::std::forward<Sender>(s) | beman::net::detail::ex::then([]<typename... A>(A&&... a) noexcept {
                return std::expected<value_type, error_type>(::std::in_place_t{}, ::std::forward<A>(a)...);
@@ -355,7 +357,7 @@ struct demo::when_any_t::sender {
     ::beman::execution::detail::product_type<::std::remove_cvref_t<Sender>...> sender;
     using sender_concept        = ex::sender_t;
     using completion_signatures = ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::combine<
-        decltype(ex::get_completion_signatures(::std::declval<Sender&&>(), ex::empty_env{}))...>>;
+        decltype(ex::get_completion_signatures(::std::declval<Sender&&>(), ex::env<>{}))...>>;
 
     template <demo::ex::receiver Receiver>
     auto connect(Receiver&& receiver) && -> state<
