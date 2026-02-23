@@ -18,16 +18,18 @@ option(
 option(
     BEMAN_NET_BUILD_EXAMPLES
     "Enable building examples. Default: ON. Values: { ON, OFF }."
-    ${PROJECT_IS_TOP_LEVEL}
+    OFF # TODO(CK): ${PROJECT_IS_TOP_LEVEL}
 )
 
-option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
+if(LINUX)
+    option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
+endif()
 
 include(FetchContent)
 
 FetchContent_Declare(
     execution
-    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../execution
+    # FETCHCONTENT_SOURCE_DIR_EXECUTION ${CMAKE_SOURCE_DIR}/../execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
     GIT_TAG 66295d5
     SYSTEM
@@ -43,7 +45,7 @@ FetchContent_MakeAvailable(execution)
 
 FetchContent_Declare(
     task
-    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
+    # FETCHCONTENT_SOURCE_DIR_TASK ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
     GIT_TAG 9075137
     FIND_PACKAGE_ARGS 0.2.0 EXACT NAMES beman.task COMPONENTS task_headers
