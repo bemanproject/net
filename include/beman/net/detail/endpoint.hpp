@@ -4,15 +4,9 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_ENDPOINT
 #define INCLUDED_BEMAN_NET_DETAIL_ENDPOINT
 
+#include <beman/net/detail/platform.hpp>
 #include <algorithm>
 #include <cstring>
-#ifdef _MSC_VER
-#    include <winsock2.h>
-#    include <ws2tcpip.h>
-#else
-#    include <sys/types.h>
-#    include <sys/socket.h>
-#endif
 
 // ----------------------------------------------------------------------------
 

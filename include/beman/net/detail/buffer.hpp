@@ -4,17 +4,11 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_BUFFER
 #define INCLUDED_BEMAN_NET_DETAIL_BUFFER
 
+#include <beman/net/detail/platform.hpp>
 #include <string>
 #include <system_error>
 #include <cassert>
 #include <cstddef>
-#ifdef _MSC_VER
-#    include <winsock2.h>
-#    include <ws2tcpip.h>
-#else
-#    include <sys/types.h>
-#    include <sys/socket.h>
-#endif
 
 // ----------------------------------------------------------------------------
 

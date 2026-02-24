@@ -6,6 +6,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include <beman/net/detail/platform.hpp>
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/container.hpp>
 #include <beman/net/detail/context_base.hpp>
@@ -17,20 +18,11 @@
 #endif
 #include <beman/net/detail/repeat_effect_until.hpp>
 #include <beman/execution/execution.hpp>
-
 #include <cstdint>
 #include <cerrno>
 #include <csignal>
 #include <limits>
 #include <system_error>
-#ifdef _MSC_VER
-#    include <winsock2.h>
-#    include <ws2tcpip.h>
-#else
-#    include <unistd.h>
-#    include <sys/types.h>
-#    include <sys/socket.h>
-#endif
 
 // ----------------------------------------------------------------------------
 

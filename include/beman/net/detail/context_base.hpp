@@ -4,19 +4,12 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_CONTEXT_BASE
 #define INCLUDED_BEMAN_NET_DETAIL_CONTEXT_BASE
 
+#include <beman/net/detail/platform.hpp>
 #include <beman/net/detail/io_base.hpp>
 #include <beman/net/detail/endpoint.hpp>
 #include <chrono>
 #include <optional>
 #include <system_error>
-#ifdef _MSC_VER
-#    include <winsock2.h>
-#    include <ws2tcpip.h>
-#else
-#    include <sys/time.h>
-#    include <sys/types.h>
-#    include <sys/socket.h>
-#endif
 
 // ----------------------------------------------------------------------------
 
