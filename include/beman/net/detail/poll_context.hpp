@@ -11,11 +11,17 @@
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/sorted_list.hpp>
 #include <vector>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <poll.h>
-#include <fcntl.h>
 #include <iostream>
+#ifdef _MSC_VER
+#    include <winsock2.h>
+#    include <ws2tcpip.h>
+#else
+#    include <unistd.h>
+#    include <poll.h>
+#    include <fcntl.h>
+#    include <sys/types.h>
+#    include <sys/socket.h>
+#endif
 
 // ----------------------------------------------------------------------------
 

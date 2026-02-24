@@ -7,7 +7,13 @@
 // ----------------------------------------------------------------------------
 
 #include <beman/net/detail/netfwd.hpp>
-#include <sys/socket.h>
+#ifdef _MSC_VER
+#    include <winsock2.h>
+#    include <ws2tcpip.h>
+#else
+#    include <sys/types.h>
+#    include <sys/socket.h>
+#endif
 
 // ----------------------------------------------------------------------------
 

@@ -6,9 +6,6 @@
 
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/endpoint.hpp>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <array>
 #include <compare>
 #include <cstdint>
@@ -16,6 +13,15 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#ifdef _MSC_VER
+#    include <winsock2.h>
+#    include <ws2tcpip.h>
+#else
+#    include <arpa/inet.h>
+#    include <netinet/in.h>
+#    include <sys/types.h>
+#    include <sys/socket.h>
+#endif
 
 // ----------------------------------------------------------------------------
 
