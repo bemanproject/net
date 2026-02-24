@@ -10,6 +10,7 @@
 
 namespace beman::net::detail::ex::detail {
 using ::beman::execution::detail::forward_like;
+using ::beman::execution::detail::make_sender_adaptor;
 using ::beman::execution::detail::sender_adaptor;
 using ::beman::execution::detail::type_list;
 using ::beman::execution::detail::variant_or_empty;
@@ -23,7 +24,7 @@ namespace beman::net::detail::ex {
 using ::beman::execution::completion_signatures;
 using ::beman::execution::detail::decayed_tuple;
 
-using ::beman::execution::empty_env;
+using ::beman::execution::env;
 using ::beman::execution::env_of_t;
 using ::beman::execution::error_types_of_t;
 using ::beman::execution::get_env;
@@ -71,7 +72,7 @@ using ::beman::execution::sync_wait;
 using ::beman::execution::then;
 using ::beman::execution::upon_error;
 using ::beman::execution::upon_stopped;
-using ::beman::execution::detail::write_env;
+using ::beman::execution::write_env;
 } // namespace beman::net::detail::ex
 
 // ----------------------------------------------------------------------------
