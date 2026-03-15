@@ -62,3 +62,11 @@ The code is working on MacOS building with the system's
 It should hopefully also work on Linux but it isn't tested, yet.
 Windows isn't supported, yet, primarily because the relevant class
 for the networking operations are different.
+
+### Supported Platforms
+
+| Compiler | Version | C++ Standards | Standard Library |
+|----------|---------|---------------|------------------|
+| GCC      | 15-14   | C++26, C++23  | libstdc++        |
+| Clang    | 22-19   | C++26, C++23  | libc++           |
+| MSVC     | latest  | C++23         | MSVC STL         |
