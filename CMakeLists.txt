@@ -15,11 +15,13 @@ option(
 )
 
 # [CMAKE.SKIP_EXAMPLES]
-option(
-    BEMAN_NET_BUILD_EXAMPLES
-    "Enable building examples. Default: ON. Values: { ON, OFF }."
-    OFF #-dk:TODO ${PROJECT_IS_TOP_LEVEL}
-)
+if(UNIX)
+    option(
+        BEMAN_NET_BUILD_EXAMPLES
+        "Enable building examples. Default: ON. Values: { ON, OFF }."
+        ${PROJECT_IS_TOP_LEVEL}
+    )
+endif()
 
 if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
@@ -56,7 +58,7 @@ add_subdirectory(src/beman/net)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
-include(./cmake/beman-install-library.cmake)
+include(infra/cmake/beman-install-library.cmake)
 beman_install_library(${PROJECT_NAME} TARGETS beman.net_headers
     DEPENDENCIES [===[beman.task 0.2.0 EXACT]===]
 )
