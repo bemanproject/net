@@ -47,7 +47,9 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     timer_priority_t                                                   d_timeouts;
     ::beman::net::detail::context_base::task*                          d_tasks{};
 
-    auto make_socket(int fd) -> ::beman::net::detail::socket_id override final { return this->d_sockets.insert(fd); }
+    auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id override final {
+        return this->d_sockets.insert(fd);
+    }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id override final {
         int fd(::socket(d, t, p));
         if (fd < 0) {

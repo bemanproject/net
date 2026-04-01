@@ -58,6 +58,8 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/net/detail/get_scope_token.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net/detail/remote_endpoint.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net/detail/uring_context.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/iocp_context.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net/detail/platform.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net/detail/initiate.hpp
 )
 
@@ -76,7 +78,13 @@ set_target_properties(
             OFF # FIXME: ${PROJECT_IS_TOP_LEVEL}
 )
 
-if(LINUX AND BEMAN_NET_WITH_URING)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME}_headers INTERFACE ws2_32 mswsock)
+    target_compile_definitions(
+        ${PROJECT_NAME}_headers
+        INTERFACE BEMAN_NET_USE_IOCP
+    )
+elseif(LINUX AND BEMAN_NET_WITH_URING)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(uring REQUIRED IMPORTED_TARGET liburing)
     target_link_libraries(${PROJECT_NAME}_headers INTERFACE PkgConfig::uring)

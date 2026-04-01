@@ -33,7 +33,7 @@ struct uring_context final : context_base {
     }
     ~uring_context() override { ::io_uring_queue_exit(&ring); }
 
-    auto make_socket(int fd) -> socket_id override { return sockets.insert(fd); }
+    auto make_socket(native_handle_type fd) -> socket_id override { return sockets.insert(fd); }
 
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> socket_id override {
         int fd(::socket(d, t, p));
