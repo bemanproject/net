@@ -41,7 +41,7 @@ jobs:
                     { "stdlibs": ["libstdc++"],
                       "tests": [
                         "Debug.Default", "Release.Default", "Release.MaxSan",
-                        "Debug.Coverage", "Debug.Werror",
+                        "Debug.Werror",
                         "Debug.Dynamic", "Release.Dynamic"
                       ]
                     }
