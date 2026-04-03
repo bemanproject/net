@@ -18,7 +18,7 @@ option(
 option(
     BEMAN_NET_BUILD_EXAMPLES
     "Enable building examples. Default: ON. Values: { ON, OFF }."
-    OFF #-dk:TODO ${PROJECT_IS_TOP_LEVEL}
+    ${PROJECT_IS_TOP_LEVEL}
 )
 
 if(LINUX)
