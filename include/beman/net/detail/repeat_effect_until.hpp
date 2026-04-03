@@ -78,6 +78,10 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
                                                     //-dk:TODO add error types of upstream and body
                                                     //-dk:TODO add stopped only if upstream or body can be stopped
                                                     beman::execution::set_stopped_t()>;
+        template <typename... Env>
+        static constexpr auto get_completion_signatures() -> completion_signatures {
+            return {};
+        }
 
         Upstream  upstream;
         Body      body;

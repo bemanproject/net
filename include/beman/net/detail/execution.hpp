@@ -33,7 +33,7 @@ using ::beman::execution::value_types_of_t;
 using ::beman::execution::get_completion_scheduler;
 using ::beman::execution::get_completion_scheduler_t;
 using ::beman::execution::get_completion_signatures;
-using ::beman::execution::get_completion_signatures_t;
+//-dk:TODO using ::beman::execution::get_completion_signatures_t;
 using ::beman::execution::get_delegation_scheduler;
 using ::beman::execution::get_delegation_scheduler_t;
 using ::beman::execution::get_scheduler;

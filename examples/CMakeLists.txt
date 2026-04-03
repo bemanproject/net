@@ -23,7 +23,6 @@ endif()
 
 set(EXAMPLES
     http-warwick
-    taps
     client
     cppcon-2024
     empty
@@ -31,12 +30,13 @@ set(EXAMPLES
     milano
     http-munich
     server
+    taps
     task
 )
 set(xEXAMPLES taps)
 
 foreach(EXAMPLE ${EXAMPLES})
-    set(EXAMPLE_TARGET ${TARGET_PREFIX}.examples.${EXAMPLE})
+    set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
     add_executable(${EXAMPLE_TARGET})
     if(BEMAN_NET_WITH_URING)
         # XXX target_compile_definitions( ${EXAMPLE_TARGET} PRIVATE BEMAN_NET_USE_URING)

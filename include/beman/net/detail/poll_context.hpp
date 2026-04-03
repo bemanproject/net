@@ -15,7 +15,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
-#include <iostream>
 
 // ----------------------------------------------------------------------------
 
@@ -116,7 +115,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     auto to_milliseconds(auto duration) -> int {
         return int(::std::chrono::duration_cast<::std::chrono::milliseconds>(duration).count());
     }
-    auto run_one() -> ::std::size_t override final {
+    auto run_one() noexcept -> ::std::size_t override final {
         auto now{::std::chrono::system_clock::now()};
         if (0u < this->process_timeout(now) || 0 < this->process_task()) {
             return 1u;
@@ -191,7 +190,7 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
             op->cancel();
             cancel_op->cancel();
         } else {
-            std::cerr << "ERROR: poll_context::cancel(): entity not cancelled!\n";
+            std::terminate();
         }
     }
     auto schedule(::beman::net::detail::context_base::task* tsk) -> void override {

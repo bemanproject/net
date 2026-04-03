@@ -183,11 +183,15 @@ struct demo::into_error_t::receiver {
 template <demo::ex::sender Sender, typename Fun>
 struct demo::into_error_t::sender {
     using sender_concept = ex::sender_t;
-    template <typename Env>
-    auto get_completion_signatures(const Env& env) const {
-        return ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::transform<
-            demo::detail::into_error_transform<Fun>::template type,
-            decltype(ex::get_completion_signatures(::std::declval<Sender>(), env))>>();
+    template <typename... Env>
+    static consteval auto get_completion_signatures() {
+        // static_assert(sizeof...(Env) <= 1u);
+        if constexpr (sizeof...(Env) <= 1)
+            return ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::transform<
+                demo::detail::into_error_transform<Fun>::template type,
+                decltype(ex::get_completion_signatures<::std::remove_cvref_t<Sender>, Env...>())>>();
+        else
+            return ex::completion_signatures<>{};
     }
 
     template <ex::receiver Receiver>
@@ -356,21 +360,24 @@ template <demo::ex::sender... Sender>
 struct demo::when_any_t::sender {
     ::beman::execution::detail::product_type<::std::remove_cvref_t<Sender>...> sender;
     using sender_concept        = ex::sender_t;
-    using completion_signatures = ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::combine<
-        decltype(ex::get_completion_signatures(::std::declval<Sender&&>(), ex::env<>{}))...>>;
+    template <typename Env>
+    static consteval auto get_completion_signatures() {
+        return ::beman::execution::detail::meta::unique<
+            ::beman::execution::detail::meta::combine<decltype(ex::get_completion_signatures<Sender, Env>())...>>();
+    }
 
     template <demo::ex::receiver Receiver>
     auto connect(Receiver&& receiver) && -> state<
         ::std::index_sequence_for<Sender...>,
         ::std::remove_cvref_t<Receiver>,
-        demo::detail::variant_from_list_t<
-            ex::detail::transform<demo::detail::decayed_set_value_t,
-                                  demo::detail::make_type_list_t<ex::detail::filter<
-                                      demo::detail::is_set_value,
-                                      decltype(ex::get_completion_signatures(*this, ex::get_env(receiver)))>>>>,
-        demo::detail::variant_from_list_t<
-            ex::detail::filter<demo::detail::is_set_error,
-                               decltype(ex::get_completion_signatures(*this, ex::get_env(receiver)))>>,
+        demo::detail::variant_from_list_t<ex::detail::transform<
+            demo::detail::decayed_set_value_t,
+            demo::detail::make_type_list_t<ex::detail::filter<
+                demo::detail::is_set_value,
+                decltype(ex::get_completion_signatures<decltype(*this), decltype(ex::get_env(receiver))>())>>>>,
+        demo::detail::variant_from_list_t<ex::detail::filter<
+            demo::detail::is_set_error,
+            decltype(ex::get_completion_signatures<decltype(*this), decltype(ex::get_env(receiver))>())>>,
         Sender...> {
         return {::std::forward<Receiver>(receiver), ::std::move(this->sender)};
     }

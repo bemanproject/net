@@ -48,7 +48,7 @@ struct beman::net::detail::context_base {
         -> void                                                                           = 0;
     virtual auto listen(::beman::net::detail::socket_id, int, ::std::error_code&) -> void = 0;
 
-    virtual auto run_one() -> ::std::size_t = 0;
+    virtual auto run_one() noexcept -> ::std::size_t = 0;
 
     virtual auto cancel(::beman::net::detail::io_base*, ::beman::net::detail::io_base*) -> void = 0;
     virtual auto schedule(::beman::net::detail::context_base::task*) -> void                    = 0;
