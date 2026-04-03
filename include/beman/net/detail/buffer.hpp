@@ -4,7 +4,7 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_BUFFER
 #define INCLUDED_BEMAN_NET_DETAIL_BUFFER
 
-#include <sys/socket.h>
+#include <beman/net/detail/platform.hpp>
 #include <string>
 #include <system_error>
 #include <cassert>

@@ -15,13 +15,11 @@ option(
 )
 
 # [CMAKE.SKIP_EXAMPLES]
-if(UNIX)
-    option(
-        BEMAN_NET_BUILD_EXAMPLES
-        "Enable building examples. Default: ON. Values: { ON, OFF }."
-        ${PROJECT_IS_TOP_LEVEL}
-    )
-endif()
+option(
+    BEMAN_NET_BUILD_EXAMPLES
+    "Enable building examples. Default: ON. Values: { ON, OFF }."
+    ${PROJECT_IS_TOP_LEVEL}
+)
 
 if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)

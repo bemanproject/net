@@ -10,7 +10,9 @@
 #include <beman/net/detail/container.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/io_context_scheduler.hpp>
-#ifdef BEMAN_NET_USE_URING
+#ifdef BEMAN_NET_USE_IOCP
+#include <beman/net/detail/iocp_context.hpp>
+#elif defined(BEMAN_NET_USE_URING)
 #include <beman/net/detail/uring_context.hpp>
 #else
 #include <beman/net/detail/poll_context.hpp>
@@ -19,8 +21,7 @@
 #include <beman/execution/execution.hpp>
 
 #include <cstdint>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <iostream>
 #include <cerrno>
 #include <csignal>
 #include <limits>
@@ -36,7 +37,9 @@ class io_context;
 
 class beman::net::io_context {
   private:
-#ifdef BEMAN_NET_USE_URING
+#ifdef BEMAN_NET_USE_IOCP
+    ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::iocp_context()};
+#elif defined(BEMAN_NET_USE_URING)
     ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::uring_context()};
 #else
     ::std::unique_ptr<::beman::net::detail::context_base> d_owned{new ::beman::net::detail::poll_context()};
@@ -57,7 +60,11 @@ class beman::net::io_context {
     };
     auto get_handle() -> handle { return handle(this); }
 
-    io_context() { std::signal(SIGPIPE, SIG_IGN); }
+    io_context() {
+#ifdef SIGPIPE
+        std::signal(SIGPIPE, SIG_IGN);
+#endif
+    }
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
 
