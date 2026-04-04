@@ -359,7 +359,7 @@ struct demo::when_any_t::state<::std::index_sequence<I...>, Receiver, Value, Err
 template <demo::ex::sender... Sender>
 struct demo::when_any_t::sender {
     ::beman::execution::detail::product_type<::std::remove_cvref_t<Sender>...> sender;
-    using sender_concept        = ex::sender_t;
+    using sender_concept = ex::sender_t;
     template <typename Env>
     static consteval auto get_completion_signatures() {
         return ::beman::execution::detail::meta::unique<
