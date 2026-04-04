@@ -112,7 +112,7 @@ struct uring_context final : context_base {
         return {res, static_cast<io_base*>(completion)};
     }
 
-    auto run_one() -> ::std::size_t override {
+    auto run_one() noexcept -> ::std::size_t override {
         if (auto count = process_task(); count) {
             return count;
         }

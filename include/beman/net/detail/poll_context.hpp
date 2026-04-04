@@ -10,11 +10,12 @@
 #include <beman/net/detail/container.hpp>
 #include <beman/net/detail/context_base.hpp>
 #include <beman/net/detail/sorted_list.hpp>
-#include <vector>
+#include <exception>
+#include <fcntl.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <poll.h>
-#include <fcntl.h>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
