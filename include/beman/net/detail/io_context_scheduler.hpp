@@ -35,6 +35,13 @@ class beman::net::detail::io_context_scheduler {
         }
     };
     struct sender {
+        using sender_concept        = ::beman::execution::sender_t;
+        using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
+        template <typename... Env>
+        static consteval auto get_completion_signatures() -> completion_signatures {
+            return {};
+        }
+
         template <typename Receiver>
         struct state : ::beman::net::detail::context_base::task {
             using operation_state_concept = ::beman::net::detail::ex::operation_state_t;
@@ -49,7 +56,6 @@ class beman::net::detail::io_context_scheduler {
             auto complete() -> void override { ::beman::net::detail::ex::set_value(::std::move(this->d_receiver)); }
         };
 
-        using sender_concept = ::beman::net::detail::ex::sender_t;
         ::beman::net::detail::context_base* d_context;
 
         template <typename Receiver>

@@ -230,7 +230,7 @@ struct iocp_context final : context_base {
         }
     }
 
-    auto run_one() -> ::std::size_t override {
+    auto run_one() noexcept -> ::std::size_t override {
         auto now = ::std::chrono::system_clock::now();
         if (process_timeout(now) > 0 || process_task() > 0) {
             return 1u;

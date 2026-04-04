@@ -106,12 +106,7 @@ class beman::net::io_context {
             : _context(context), _receiver(::std::forward<Receiver>(receiver)) {}
         run_one_state(run_one_state&&) = delete;
         auto start() & noexcept -> void {
-            try {
-                ::beman::execution::set_value(::std::move(this->_receiver), this->_context->run_one());
-            } catch (...) {
-                //-dk:TODO deal with exceptions in async_run_one
-                std::cout << "run_one_state exception caught\n";
-            }
+            ::beman::execution::set_value(::std::move(this->_receiver), this->_context->run_one());
         }
     };
 
@@ -139,7 +134,7 @@ class beman::net::io_context {
                 [&last_count] { return last_count == 0; });
         });
     }
-    ::std::size_t run_one() { return this->d_context.run_one(); }
+    ::std::size_t run_one() noexcept { return this->d_context.run_one(); }
     ::std::size_t run() {
         ::std::size_t count{};
         while (::std::size_t c = this->run_one()) {

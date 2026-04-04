@@ -224,6 +224,10 @@ struct task {
         ::beman::net::detail::ex::completion_signatures<::beman::net::detail::ex::set_error_t(::std::exception_ptr),
                                                         ::beman::net::detail::ex::set_stopped_t(),
                                                         typename task_completion<::std::decay_t<Result>>::type>;
+    template <typename...>
+    static consteval auto get_completion_signatures() -> completion_signatures {
+        return {};
+    }
 
     template <typename Receiver>
     auto connect(Receiver&& receiver) {

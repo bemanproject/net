@@ -107,7 +107,7 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
         Sender _sender;
 
         template <typename Env>
-        auto get_completion_signatures(const Env&) const {
+        static consteval auto get_completion_signatures() {
             return beman::execution::completion_signatures<beman::execution::set_value_t(expected_t<Sender, Env>),
                                                            beman::execution::set_stopped_t()>();
         }

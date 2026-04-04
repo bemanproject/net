@@ -138,6 +138,10 @@ struct beman::net::detail::sender {
         ::beman::net::detail::ex::completion_signatures<typename Data::completion_signature,
                                                         ::beman::net::detail::ex::set_error_t(::std::error_code),
                                                         ::beman::net::detail::ex::set_stopped_t()>;
+    template <typename...>
+    static consteval auto get_completion_signatures() -> completion_signatures {
+        return {};
+    }
 
     Data     d_data;
     Upstream d_upstream;
