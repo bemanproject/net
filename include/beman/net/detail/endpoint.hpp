@@ -6,7 +6,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <sys/socket.h>
+#include <beman/net/detail/platform.hpp>
 
 // ----------------------------------------------------------------------------
 

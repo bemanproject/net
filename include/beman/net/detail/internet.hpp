@@ -6,9 +6,8 @@
 
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/endpoint.hpp>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
+#include <beman/net/detail/platform.hpp>
+#include <algorithm>
 #include <array>
 #include <compare>
 #include <cstdint>
@@ -135,7 +134,7 @@ class beman::net::ip::address_v6 {
 
     constexpr address_v6() noexcept;
     constexpr address_v6(const address_v6&) noexcept = default;
-    constexpr address_v6(const unsigned char (&addr)[16]) noexcept { ::std::memcpy(d_bytes.data(), addr, 16); }
+    constexpr address_v6(const unsigned char (&addr)[16]) noexcept { ::std::copy(addr, addr + 16, d_bytes.data()); }
 
     auto           operator=(const address_v6&) noexcept -> address_v6& = default;
     constexpr auto operator==(const address_v6&) const -> bool          = default;

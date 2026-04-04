@@ -19,7 +19,13 @@
 #include <beman/net/detail/io_context_scheduler.hpp>
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/operations.hpp>
+#ifdef BEMAN_NET_USE_IOCP
+#include <beman/net/detail/iocp_context.hpp>
+#elif defined(BEMAN_NET_USE_URING)
+#include <beman/net/detail/uring_context.hpp>
+#else
 #include <beman/net/detail/poll_context.hpp>
+#endif
 #include <beman/net/detail/sender.hpp>
 #include <beman/net/detail/socket_base.hpp>
 #include <beman/net/detail/stop_token.hpp>
