@@ -18,8 +18,9 @@ option(
 option(
     BEMAN_NET_BUILD_EXAMPLES
     "Enable building examples. Default: ON. Values: { ON, OFF }."
-    ${PROJECT_IS_TOP_LEVEL}
+    TRUE
 )
+# ${PROJECT_IS_TOP_LEVEL}
 
 if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
@@ -52,6 +53,9 @@ if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
 endif()
 
-if(BEMAN_NET_BUILD_EXAMPLES)
+message(NOTICE "Message test")
+set(BEMAN_NET_BUILD_EXAMPLES TRUE)
+if(${BEMAN_NET_BUILD_EXAMPLES})
+    message(NOTICE "Building examples")
     add_subdirectory(examples)
 endif()

@@ -29,11 +29,13 @@ set(EXAMPLES
     http-server
     milano
     http-munich
+    postgres
     server
     taps
     task
 )
 set(xEXAMPLES taps)
+set(EXAMPLES postgres)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
@@ -42,6 +44,9 @@ foreach(EXAMPLE ${EXAMPLES})
         # XXX target_compile_definitions( ${EXAMPLE_TARGET} PRIVATE BEMAN_NET_USE_URING)
     endif()
     target_sources(${EXAMPLE_TARGET} PRIVATE ${EXAMPLE}.cpp)
+    target_include_directories(${EXAMPLE_TARGET} PRIVATE /Library/PostgreSQL/18/include)
+    target_link_directories(${EXAMPLE_TARGET} PRIVATE /Library/PostgreSQL/18/lib)
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE pq)
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::net_headers)
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::task_headers)
 endforeach()
