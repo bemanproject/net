@@ -35,7 +35,7 @@ set(EXAMPLES
     task
 )
 set(xEXAMPLES taps)
-set(EXAMPLES postgres)
+set(EXAMPLES postgres populate-postgres)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})

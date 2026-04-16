@@ -4,8 +4,9 @@
 #include <beman/execution/execution.hpp>
 #include <beman/net/net.hpp>
 #include <libpq-fe.h>
-#include <stdio.h>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <string>
 
@@ -18,6 +19,7 @@ namespace pq {
 
     struct error {
         std::string msg;
+        explicit error(const char* m) : msg(m) {}
         error(const connection& conn) : msg(PQerrorMessage(conn.get())) {}
         const char* what() const noexcept { return msg.c_str(); };
         friend std::ostream& operator<< (std::ostream& os, const error& err) {
@@ -31,6 +33,8 @@ namespace pq {
     // PQisBusy(const PGconn *conn) - PQgetResult() would block
     // PQconsumeInput(const PGconn *conn) - consume available input, clear socket stat
     // PQgetResult(const PGconn *conn) - get result, return nullptr if no more results, or would block
+    // PQsetSingleRowMode(PGconn *conn) - set single row mode, return 0 on failure
+    // PQsetChunkedMode(PGconn *conn, int arg) - set chunked mode, return 0 on failure
 
     struct exec {
         using sender_concept = ex::sender_t;
@@ -45,6 +49,27 @@ namespace pq {
             connection& conn;
             std::string query;
             auto start() noexcept -> void {
+                std::cout << "exec.start()\n";
+                if (!PQsendQuery(conn.get(), query.c_str())) {
+                    std::cout << "PQsendQuery failed: " << PQerrorMessage(conn.get()) << "\n";
+                    ex::set_error(std::move(receiver), pq::error(PQerrorMessage(conn.get())));
+                    return;
+                }
+
+                if (false && PQisBusy(conn.get())) {
+                    ex::set_error(std::move(receiver), pq::error("PQsendQuery would block"));
+                }
+                else {
+                    complete();
+                }
+            }
+            void complete() noexcept {
+                if (pq::result res{pq::result(PQgetResult(conn.get()))}) {
+                    ex::set_value(std::move(receiver), std::move(res));
+                }
+                else {
+                    ex::set_error(std::move(receiver), pq::error(conn));
+                }
             }
         };
 
@@ -64,28 +89,46 @@ namespace pq {
 int main() {
     std::cout << std::unitbuf;
     net::io_context io;
-    pq::connection conn(PQconnectdb("user=sruser dbname=srchat"));
+    std::cout << "connecting\n";
+    pq::connection conn(PQconnectdb("user=sruser dbname=sruser"));
     PQsetnonblocking(conn.get(), 1);
+    std::cout << "connection created\n";
 
     if (PQstatus(conn.get()) != CONNECTION_OK) {
         std::cout << "Connection to database failed: " << pq::error(conn) << '\n'; ;
         return 1;
     }
-    const char*const query_version = "SELECT version(), pg_sleep(0)";
+    [[maybe_unused]] const char*const query_version = "SELECT version(), pg_sleep(3)";
+#if 0
     pq::result res(PQexec(conn.get(), query_version));
     if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
         std::cout << "SELECT failed: " << pq::error(conn) << '\n';
         return 1;
     }
     std::cout << "PostgreSQL version: " << PQgetvalue(res.get(), 0, 0) << '\n';
+#endif
 
-    [[maybe_unused]] auto result = ex::sync_wait(pq::exec(conn, query_version));
-    if (result) {
-        auto[res] = *std::move(result);
-        if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
-            std::cout << "SELECT failed: " << pq::error(conn) << '\n';
-            return 1;
+    std::string query(
+        "select *, pg_sleep(0.1) from messages where 0 <= key and key < 3;"
+        "select *, pg_sleep(0.1) from messages where 3 <= key and key < 6;"
+        );
+    try {
+        [[maybe_unused]] auto result = ex::sync_wait(pq::exec(conn, query));
+        if (result) {
+            auto[res] = *std::move(result);
+            if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
+                std::cout << "SELECT failed: " << pq::error(conn) << '\n';
+                return 1;
+            }
+            for (int i{}, n{PQntuples(res.get())}; i < n; ++i) {
+                for (int j{}, m{PQnfields(res.get())}; j < m; ++j) {
+                    std::cout << PQgetvalue(res.get(), i, j) << ',';
+                }
+                std::cout << '\n';
+            }
         }
-        std::cout << "PostgreSQL version: " << PQgetvalue(res.get(), 0, 0) << '\n';
+    }
+    catch (const pq::error& e) {
+        std::cout << "Error: " << e << '\n';
     }
 }
