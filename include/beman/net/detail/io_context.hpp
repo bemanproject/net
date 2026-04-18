@@ -68,6 +68,9 @@ class beman::net::io_context {
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
 
+    auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id {
+        return this->d_context.make_socket(fd);
+    }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id {
         return this->d_context.make_socket(d, t, p, error);
     }

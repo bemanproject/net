@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
+struct poll_desc;
 struct accept_desc;
 struct connect_desc;
 struct send_desc;
@@ -22,6 +23,9 @@ struct receive_from_desc;
 } // namespace beman::net::detail
 
 namespace beman::net {
+using async_poll_t = ::beman::net::detail::sender_cpo<::beman::net::detail::poll_desc>;
+inline constexpr async_poll_t async_poll{};
+
 using async_accept_t = ::beman::net::detail::sender_cpo<::beman::net::detail::accept_desc>;
 inline constexpr async_accept_t async_accept{};
 
@@ -41,6 +45,32 @@ inline constexpr async_receive_from_t async_receive_from{};
 } // namespace beman::net
 
 // ----------------------------------------------------------------------------
+
+struct beman::net::detail::poll_desc {
+    using operation = ::beman::net::detail::context_base::poll_operation;
+    template <typename Socket, typename...>
+    struct data {
+        using completion_signature = ::beman::net::detail::ex::set_value_t(::beman::net::event_type);
+
+        Socket& d_socket;
+        ::beman::net::event_type d_mask;
+        data(Socket& socket, ::beman::net::event_type mask): d_socket(socket), d_mask(mask) {}
+
+        auto id() const { return this->d_socket.id(); }
+        auto events() const -> ::beman::net::event_type { return this->d_mask; }
+        auto set_value([[maybe_unused]] operation& o, auto&& receiver) {
+            ::beman::net::detail::ex::set_value(
+                ::std::move(receiver),
+                //::std::get<0>(o)
+                ::beman::net::event_type{}
+            );
+        }
+        auto get_scheduler() { return this->d_socket.get_scheduler(); }
+        auto submit([[maybe_unused]] auto* base) -> ::beman::net::detail::submit_result {
+            return ::beman::net::detail::submit_result::ready;
+        }
+    };
+};
 
 struct beman::net::detail::accept_desc {
     using operation = ::beman::net::detail::context_base::accept_operation;

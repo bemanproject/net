@@ -14,13 +14,23 @@ namespace ex = beman::execution;
 namespace net = beman::net;
 
 namespace pq {
-    using connection = std::unique_ptr<PGconn, decltype([](auto conn){ PQfinish(conn); })>;
+    struct connection {
+        using handle_t = std::unique_ptr<PGconn, decltype([](auto conn){ PQfinish(conn); })>;
+
+        handle_t         handle;
+        net::ip::tcp::socket socket;
+        connection(net::io_context& io, PGconn* conn): handle(conn), socket(io.get_scheduler().get_context(), io.make_socket(PQsocket(handle.get()))) {}
+
+        net::ip::tcp::socket& get_socket() { return this->socket; }
+        operator PGconn*() { return this->handle.get(); }
+        operator const PGconn*() const { return this->handle.get(); }
+    };
     using result = std::unique_ptr<PGresult, decltype([](auto res){ PQclear(res); })>;
 
     struct error {
         std::string msg;
         explicit error(const char* m) : msg(m) {}
-        error(const connection& conn) : msg(PQerrorMessage(conn.get())) {}
+        error(const connection& conn) : msg(PQerrorMessage(conn)) {}
         const char* what() const noexcept { return msg.c_str(); };
         friend std::ostream& operator<< (std::ostream& os, const error& err) {
             return os << err.msg;
@@ -45,31 +55,44 @@ namespace pq {
         template <typename Receiver>
         struct state {
             using operation_state_concept = ex::operation_state_t;
-            std::remove_cvref_t<Receiver> receiver;
-            connection& conn;
-            std::string query;
-            auto start() noexcept -> void {
-                std::cout << "exec.start()\n";
-                if (!PQsendQuery(conn.get(), query.c_str())) {
-                    std::cout << "PQsendQuery failed: " << PQerrorMessage(conn.get()) << "\n";
-                    ex::set_error(std::move(receiver), pq::error(PQerrorMessage(conn.get())));
-                    return;
-                }
 
-                if (false && PQisBusy(conn.get())) {
-                    ex::set_error(std::move(receiver), pq::error("PQsendQuery would block"));
+            struct env {
+                using error_types = ex::completion_signatures<ex::set_error_t(error)>;
+            };
+            static ex::task<result, env> work(connection& conn, std::string query) noexcept {
+                std::cout << "exec.work()\n";
+                if (!PQsendQuery(conn, query.c_str())) {
+                    std::cout << "PQsendQuery failed: " << PQerrorMessage(conn) << "\n";
+                    co_yield ex::with_error(pq::error(conn));
+                }
+                PQflush(conn);
+                while (PQisBusy(conn)) {
+                    std::cout << "co_awaiting poll\n";
+                    auto evs = co_await net::async_poll(conn.get_socket(), net::event_type::in);
+                    std::cout << "co_awaiting done=" << evs << "\n";
+                    if (!PQconsumeInput(conn)) {
+                        std::cout << "PQconsumeInput failed: " << PQerrorMessage(conn) << "\n";
+                        co_yield ex::with_error(pq::error(conn));
+                    }
+                    break;
+                }
+                if (pq::result res{pq::result(PQgetResult(conn))}) {
+                    co_return std::move(res);
                 }
                 else {
-                    complete();
+                    co_yield ex::with_error(pq::error(conn));
                 }
+                std::unreachable();
             }
-            void complete() noexcept {
-                if (pq::result res{pq::result(PQgetResult(conn.get()))}) {
-                    ex::set_value(std::move(receiver), std::move(res));
-                }
-                else {
-                    ex::set_error(std::move(receiver), pq::error(conn));
-                }
+            using inner_state_t = ex::connect_result_t<decltype(work(std::declval<connection&>(), std::string{})), Receiver&&>;
+
+            inner_state_t inner_state;
+
+            state(Receiver&& r, connection& conn, std::string query)
+                : inner_state(ex::connect(work(conn, std::move(query)), std::forward<Receiver>(r))) {}
+
+            auto start() noexcept -> void {
+                ex::start(this->inner_state);
             }
         };
 
@@ -90,17 +113,17 @@ int main() {
     std::cout << std::unitbuf;
     net::io_context io;
     std::cout << "connecting\n";
-    pq::connection conn(PQconnectdb("user=sruser dbname=sruser"));
-    PQsetnonblocking(conn.get(), 1);
+    pq::connection conn(io, PQconnectdb("user=sruser dbname=sruser"));
+    PQsetnonblocking(conn, 1);
     std::cout << "connection created\n";
 
-    if (PQstatus(conn.get()) != CONNECTION_OK) {
+    if (PQstatus(conn) != CONNECTION_OK) {
         std::cout << "Connection to database failed: " << pq::error(conn) << '\n'; ;
         return 1;
     }
     [[maybe_unused]] const char*const query_version = "SELECT version(), pg_sleep(3)";
 #if 0
-    pq::result res(PQexec(conn.get(), query_version));
+    pq::result res(PQexec(conn, query_version));
     if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
         std::cout << "SELECT failed: " << pq::error(conn) << '\n';
         return 1;
@@ -109,8 +132,8 @@ int main() {
 #endif
 
     std::string query(
-        "select *, pg_sleep(0.1) from messages where 0 <= key and key < 3;"
-        "select *, pg_sleep(0.1) from messages where 3 <= key and key < 6;"
+        "select *, pg_sleep(10.1) from messages where 0 <= key and key < 3;"
+        //"select *, pg_sleep(0.1) from messages where 3 <= key and key < 6;"
         );
     try {
         [[maybe_unused]] auto result = ex::sync_wait(pq::exec(conn, query));
