@@ -4,6 +4,7 @@
 #include <beman/execution/execution.hpp>
 #include <beman/net/net.hpp>
 #include <libpq-fe.h>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -13,6 +14,7 @@
 
 namespace ex  = beman::execution;
 namespace net = beman::net;
+using namespace std::chrono_literals;
 
 namespace pg {
 struct connection {
@@ -129,7 +131,9 @@ namespace {
 
         auto state{ex::connect(std::move(snd), receiver{loop})};
         ex::start(state);
+        std::cout << "running loop\n";
         loop.run();
+        std::cout << "running loop done\n";
     }
 }
 
@@ -146,7 +150,22 @@ int main() {
                 ex::write_env(std::move(s), ex::env{ex::prop{ex::get_scheduler, loop.get_scheduler()}}),
                 scope.get_token());
         }};
+        spawn(std::invoke([](auto sched)->ex::task<> {
+            while (true) {
+                std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
+                co_await net::resume_after(sched, 1s);
+            }
+        }, io.get_scheduler()) | ex::upon_error([](auto&&) noexcept {}));
 
+        ex::sync_wait(ex::when_all(std::invoke([](auto sched)->ex::task<> {
+            while (true) {
+                std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
+                co_await net::resume_after(sched, 1s);
+            }
+        }, io.get_scheduler()),
+        io.async_run_unstopped()));
+
+        if (false) {
         std::string query("select *, pg_sleep(0.5) from messages where 0 <= key and key < 3;");
         spawn(pg::exec(conn, query) | ex::then([](pg::result res) noexcept {
             for (int i{}, n{PQntuples(res.get())}; i < n; ++i) {
@@ -158,8 +177,9 @@ int main() {
         }) | ex::upon_error([](pg::error error) noexcept {
             std::cout << "error: " << error << "\n";
         }));
+        }
 
-        sync_run(loop, ex::when_all(scope.join(), io.async_run())
+        sync_run(loop, ex::when_all(scope.join(), io.async_run_unstopped() | ex::then([]() noexcept { std::cout << "async_run done\n"; }))
             | ex::upon_error([](auto&&) noexcept {})
             | ex::upon_stopped([]() noexcept {})
         );

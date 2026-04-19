@@ -137,6 +137,12 @@ class beman::net::io_context {
                 [&last_count] { return last_count == 0; });
         });
     }
+    auto async_run_unstopped() {
+        return beman::net::repeat_effect_until(
+                beman::execution::just(),
+                this->async_run_one() | beman::execution::then([](auto){}),
+                [] { return false; });
+    }
     ::std::size_t run_one() noexcept { return this->d_context.run_one(); }
     ::std::size_t run() {
         ::std::size_t count{};
