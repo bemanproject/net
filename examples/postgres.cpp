@@ -9,24 +9,28 @@
 #include <sstream>
 #include <memory>
 #include <string>
+#include <stdexcept>
 
 namespace ex  = beman::execution;
 namespace net = beman::net;
 
-namespace pq {
+namespace pg {
 struct connection {
     using handle_t = std::unique_ptr<PGconn, decltype([](auto conn) { PQfinish(conn); })>;
 
     handle_t             handle;
     net::ip::tcp::socket socket;
     connection(net::io_context& io, PGconn* conn)
-        : handle(conn), socket(io.get_scheduler().get_context(), io.make_socket(PQsocket(handle.get()))) {}
+        : handle(conn), socket(io.get_scheduler().get_context(), io.make_socket(PQsocket(handle.get()))) {
+        if (PQstatus(conn) != CONNECTION_OK) {
+            throw std::runtime_error(std::string("Connection to database failed: ") + PQerrorMessage(conn));
+        }
+    }
 
     net::ip::tcp::socket& get_socket() { return this->socket; }
                           operator PGconn*() { return this->handle.get(); }
                           operator const PGconn*() const { return this->handle.get(); }
 };
-using result = std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })>;
 
 struct error {
     std::string msg;
@@ -35,6 +39,8 @@ struct error {
     const char*          what() const noexcept { return msg.c_str(); };
     friend std::ostream& operator<<(std::ostream& os, const error& err) { return os << err.msg; }
 };
+
+using result = std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })>;
 
 // PQsetnonblocking(const PGconn *conn, int arg) - set non-blocking mode to avoid write blocks
 // PQsocket(const PGconn *conn) - get socket
@@ -64,7 +70,7 @@ struct exec {
             std::cout << "exec.work()\n";
             if (!PQsendQuery(conn, query.c_str())) {
                 std::cout << "PQsendQuery failed: " << PQerrorMessage(conn) << "\n";
-                co_yield ex::with_error(pq::error(conn));
+                co_yield ex::with_error(pg::error(conn));
             }
             PQflush(conn);
             while (PQisBusy(conn)) {
@@ -73,13 +79,13 @@ struct exec {
                 std::cout << "co_awaiting done=" << evs << "\n";
                 if (!PQconsumeInput(conn)) {
                     std::cout << "PQconsumeInput failed: " << PQerrorMessage(conn) << "\n";
-                    co_yield ex::with_error(pq::error(conn));
+                    co_yield ex::with_error(pg::error(conn));
                 }
             }
-            if (pq::result res{pq::result(PQgetResult(conn))}) {
+            if (pg::result res{pg::result(PQgetResult(conn))}) {
                 co_return std::move(res);
             } else {
-                co_yield ex::with_error(pq::error(conn));
+                co_yield ex::with_error(pg::error(conn));
             }
             std::unreachable();
         }
@@ -105,50 +111,36 @@ struct exec {
 };
 
 inline constexpr double sleep_time = 3.0;
-} // namespace pq
+} // namespace pg
 
 int main() {
     std::cout << std::unitbuf;
-    net::io_context io;
-    std::cout << "connecting\n";
-    pq::connection conn(io, PQconnectdb("user=sruser dbname=sruser"));
-    // PQsetnonblocking(conn, 1);
-    std::cout << "connection created\n";
-
-    if (PQstatus(conn) != CONNECTION_OK) {
-        std::cout << "Connection to database failed: " << pq::error(conn) << '\n';
-        ;
-        return 1;
-    }
-    [[maybe_unused]] const char* const query_version = "SELECT version(), pg_sleep(3)";
-#if 0
-    pq::result res(PQexec(conn, query_version));
-    if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
-        std::cout << "SELECT failed: " << pq::error(conn) << '\n';
-        return 1;
-    }
-    std::cout << "PostgreSQL version: " << PQgetvalue(res.get(), 0, 0) << '\n';
-#endif
-
-    std::string query("select *, pg_sleep(0.5) from messages where 0 <= key and key < 3;"
-                      //"select *, pg_sleep(0.1) from messages where 3 <= key and key < 6;"
-    );
     try {
-        [[maybe_unused]] auto result = ex::sync_wait(ex::when_all(pq::exec(conn, query), io.async_run()));
-        if (result) {
-            auto [res] = *std::move(result);
-            if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
-                std::cout << "SELECT failed: " << pq::error(conn) << '\n';
-                return 1;
-            }
+        net::io_context    io;
+        pg::connection     conn(io, PQconnectdb("user=sruser dbname=sruser"));
+        ex::counting_scope scope;
+        ex::run_loop       loop;
+
+        auto spawn{[&](ex::sender auto s){
+            ex::spawn(
+                ex::write_env(std::move(s), ex::env{ex::prop{ex::get_scheduler, loop.get_scheduler()}}),
+                scope.get_token());
+        }};
+
+        std::string query("select *, pg_sleep(0.5) from messages where 0 <= key and key < 3;");
+        spawn(pg::exec(conn, query) | ex::then([](pg::result res) noexcept {
             for (int i{}, n{PQntuples(res.get())}; i < n; ++i) {
                 for (int j{}, m{PQnfields(res.get())}; j < m; ++j) {
                     std::cout << PQgetvalue(res.get(), i, j) << ',';
                 }
                 std::cout << '\n';
             }
-        }
-    } catch (const pq::error& e) {
+        }) | ex::upon_error([](pg::error error) noexcept {
+            std::cout << "error: " << error << "\n";
+        }));
+
+        ex::sync_wait(ex::when_all(scope.join(), io.async_run()/*-dk:TODO , loop.run() */));
+    } catch (const pg::error& e) {
         std::cout << "Error: " << e << '\n';
     }
 }
