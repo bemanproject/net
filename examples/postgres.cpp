@@ -113,6 +113,26 @@ struct exec {
 inline constexpr double sleep_time = 3.0;
 } // namespace pg
 
+namespace {
+    auto sync_run(ex::run_loop& loop, ex::sender auto snd) {
+        struct env {
+            ex::run_loop& loop;
+            auto query(ex::get_scheduler_t const&) const noexcept { return this->loop.get_scheduler(); }
+        };
+        struct receiver {
+            ex::run_loop& loop;
+            using receiver_concept = ex::receiver_t;
+
+            auto get_env() const noexcept { return env{this->loop}; }
+            auto set_value() noexcept { this->loop.finish();}
+        };
+
+        auto state{ex::connect(std::move(snd), receiver{loop})};
+        ex::start(state);
+        loop.run();
+    }
+}
+
 int main() {
     std::cout << std::unitbuf;
     try {
@@ -139,7 +159,10 @@ int main() {
             std::cout << "error: " << error << "\n";
         }));
 
-        ex::sync_wait(ex::when_all(scope.join(), io.async_run()/*-dk:TODO , loop.run() */));
+        sync_run(loop, ex::when_all(scope.join(), io.async_run())
+            | ex::upon_error([](auto&&) noexcept {})
+            | ex::upon_stopped([]() noexcept {})
+        );
     } catch (const pg::error& e) {
         std::cout << "Error: " << e << '\n';
     }
