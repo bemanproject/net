@@ -15,16 +15,16 @@ constexpr ::beman::net::event_type operator&(::beman::net::event_type e0, ::bema
     return ::beman::net::event_type(::std::uint8_t(e0) & ::std::uint8_t(e1));
 }
 inline std::ostream& operator<<(std::ostream& os, ::beman::net::event_type e) {
-    switch (e) 
-    {default:
+    switch (e) {
+    default:
         return os << "invalid(" << ::std::uint8_t(e) << ")";
-     case ::beman::net::event_type::none:
+    case ::beman::net::event_type::none:
         return os << "none";
-     case ::beman::net::event_type::in:
+    case ::beman::net::event_type::in:
         return os << "in";
-     case ::beman::net::event_type::out:
+    case ::beman::net::event_type::out:
         return os << "out";
-     case ::beman::net::event_type::in_out:
+    case ::beman::net::event_type::in_out:
         return os << "in|out";
     }
 }

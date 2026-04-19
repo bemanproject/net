@@ -52,22 +52,21 @@ struct beman::net::detail::poll_desc {
     struct data {
         using completion_signature = ::beman::net::detail::ex::set_value_t(::beman::net::event_type);
 
-        Socket& d_socket;
+        Socket&                  d_socket;
         ::beman::net::event_type d_mask;
-        data(Socket& socket, ::beman::net::event_type mask): d_socket(socket), d_mask(mask) {}
+        data(Socket& socket, ::beman::net::event_type mask) : d_socket(socket), d_mask(mask) {}
 
         auto id() const { return this->d_socket.id(); }
         auto events() const -> ::beman::net::event_type { return this->d_mask; }
         auto set_value([[maybe_unused]] operation& o, auto&& receiver) {
-            ::beman::net::detail::ex::set_value(
-                ::std::move(receiver),
-                //::std::get<0>(o)
-                ::beman::net::event_type{}
-            );
+            ::beman::net::detail::ex::set_value(::std::move(receiver),
+                                                //::std::get<0>(o)
+                                                ::beman::net::event_type{});
         }
         auto get_scheduler() { return this->d_socket.get_scheduler(); }
         auto submit([[maybe_unused]] auto* base) -> ::beman::net::detail::submit_result {
-            return ::beman::net::detail::submit_result::ready;
+            ::std::get<1>(*base) = this->d_mask;
+            return this->get_scheduler().poll(base);
         }
     };
 };

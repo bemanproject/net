@@ -9,29 +9,28 @@
 #include <string>
 
 namespace pq {
-    using connection = std::unique_ptr<PGconn, decltype([](auto conn){ PQfinish(conn); })>;
-    using result = std::unique_ptr<PGresult, decltype([](auto res){ PQclear(res); })>;
+using connection = std::unique_ptr<PGconn, decltype([](auto conn) { PQfinish(conn); })>;
+using result     = std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })>;
 
-    struct error {
-        std::string msg;
-        error(const connection& conn) : msg(PQerrorMessage(conn.get())) {}
-        const char* what() const noexcept { return msg.c_str(); };
-        friend std::ostream& operator<< (std::ostream& os, const error& err) {
-            return os << err.msg;
-        }
-    };
-}
+struct error {
+    std::string msg;
+    error(const connection& conn) : msg(PQerrorMessage(conn.get())) {}
+    const char*          what() const noexcept { return msg.c_str(); };
+    friend std::ostream& operator<<(std::ostream& os, const error& err) { return os << err.msg; }
+};
+} // namespace pq
 
 int main() {
     std::cout << std::unitbuf;
     pq::connection conn(PQconnectdb("user=sruser dbname=sruser"));
 
     if (PQstatus(conn.get()) != CONNECTION_OK) {
-        std::cout << "Connection to database failed: " << pq::error(conn) << '\n'; ;
+        std::cout << "Connection to database failed: " << pq::error(conn) << '\n';
+        ;
         return 1;
     }
-    const char*const query_version = "SELECT version(), pg_sleep(0)";
-    pq::result res(PQexec(conn.get(), query_version));
+    const char* const query_version = "SELECT version(), pg_sleep(0)";
+    pq::result        res(PQexec(conn.get(), query_version));
     if (PQresultStatus(res.get()) != PGRES_TUPLES_OK) {
         std::cout << "SELECT failed: " << pq::error(conn) << '\n';
         return 1;
@@ -41,7 +40,7 @@ int main() {
     std::string input("/usr/share/dict/words");
     std::cout << "populating from '" << input << "'\n";
     std::ifstream file(input);
-    std::string message;
+    std::string   message;
     for (std::size_t i{}; i < 100 && std::getline(file, message); ++i) {
         std::ostringstream ins;
         ins << "insert into messages (key, message) values(" << i << ", '" << message << "');";

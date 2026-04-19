@@ -76,6 +76,9 @@ class beman::net::detail::io_context_scheduler {
     auto cancel(beman::net::detail::io_base* cancel_op, beman::net::detail::io_base* op) -> void {
         this->d_context->cancel(cancel_op, op);
     }
+    auto poll(::beman::net::detail::context_base::poll_operation* op) -> ::beman::net::detail::submit_result {
+        return this->d_context->poll(op);
+    }
     auto accept(::beman::net::detail::context_base::accept_operation* op) -> ::beman::net::detail::submit_result {
         return this->d_context->accept(op);
     }
