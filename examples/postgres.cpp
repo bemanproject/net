@@ -116,20 +116,19 @@ inline constexpr double sleep_time = 3.0;
 } // namespace pg
 
 namespace {
+    struct sync_run_env {
+        ex::run_loop& loop;
+        auto query(ex::get_scheduler_t const&) const noexcept { return this->loop.get_scheduler(); }
+    };
+    struct sync_run_receiver {
+        ex::run_loop& loop;
+        using receiver_concept = ex::receiver_t;
+
+        auto get_env() const noexcept { return sync_run_env{this->loop}; }
+        auto set_value() noexcept { this->loop.finish();}
+    };
     auto sync_run(ex::run_loop& loop, ex::sender auto snd) {
-        struct env {
-            ex::run_loop& loop;
-            auto query(ex::get_scheduler_t const&) const noexcept { return this->loop.get_scheduler(); }
-        };
-        struct receiver {
-            ex::run_loop& loop;
-            using receiver_concept = ex::receiver_t;
-
-            auto get_env() const noexcept { return env{this->loop}; }
-            auto set_value() noexcept { this->loop.finish();}
-        };
-
-        auto state{ex::connect(std::move(snd), receiver{loop})};
+        auto state{ex::connect(std::move(snd), sync_run_receiver{loop})};
         ex::start(state);
         std::cout << "running loop\n";
         loop.run();
@@ -150,6 +149,12 @@ int main() {
                 ex::write_env(std::move(s), ex::env{ex::prop{ex::get_scheduler, loop.get_scheduler()}}),
                 scope.get_token());
         }};
+        spawn(ex::read_env(ex::get_scheduler)
+            | ex::then([](auto&&)noexcept {})
+            | ex::upon_error([](auto&&)noexcept {})
+        );
+
+
         spawn(std::invoke([](auto sched)->ex::task<> {
             while (true) {
                 std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
@@ -157,13 +162,14 @@ int main() {
             }
         }, io.get_scheduler()) | ex::upon_error([](auto&&) noexcept {}));
 
+#if 0
         ex::sync_wait(ex::when_all(std::invoke([](auto sched)->ex::task<> {
             while (true) {
                 std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
                 co_await net::resume_after(sched, 1s);
             }
         }, io.get_scheduler()),
-        io.async_run_unstopped()));
+        io.async_run()));
 
         if (false) {
         std::string query("select *, pg_sleep(0.5) from messages where 0 <= key and key < 3;");
@@ -178,11 +184,22 @@ int main() {
             std::cout << "error: " << error << "\n";
         }));
         }
+#endif
 
-        sync_run(loop, ex::when_all(scope.join(), io.async_run_unstopped() | ex::then([]() noexcept { std::cout << "async_run done\n"; }))
+
+
+
+        sync_run(loop,
+            io.async_run()
             | ex::upon_error([](auto&&) noexcept {})
             | ex::upon_stopped([]() noexcept {})
         );
+#if 0
+        sync_run(loop, ex::when_all(scope.join(), io.async_run() | ex::then([]() noexcept { std::cout << "async_run done\n"; }))
+            | ex::upon_error([](auto&&) noexcept {})
+            | ex::upon_stopped([]() noexcept {})
+        );
+#endif
     } catch (const pg::error& e) {
         std::cout << "Error: " << e << '\n';
     }

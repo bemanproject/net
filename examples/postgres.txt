@@ -1,0 +1,15 @@
+psql -U postgres
+> create role sruser password 'sruser' createdb login;
+> create database sruser;
+
+psql -d sruser -U postgres
+> create table messages(key integer, message text);
+> create unique index msg_index on messages(key);
+> grant all on messages to sruser;
+
+psql -U sruser
+> insert into messages (key, message) values(0, 'zero');
+
+touch ~/.pgpass
+chmod go-rwx ~/.pgpass
+echo '*:*:*:sruser:sruser' > ~/.pgpass
