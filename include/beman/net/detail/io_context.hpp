@@ -128,20 +128,20 @@ class beman::net::io_context {
 
     auto async_run_one() { return run_one_sender{this}; }
     auto async_run() {
-        return beman::execution::let_value(
-            beman::execution::read_env(beman::execution::get_scheduler),
-            [this, last_count = std::size_t(1)]([[maybe_unused]] auto sched) mutable {
-            (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being unused
-            return beman::net::repeat_effect_until(
-                            beman::execution::just(),
-                            beman::execution::starts_on(sched,
-                            this->async_run_one() |
-                            beman::execution::then([&last_count](std::size_t count) { last_count = count; })
-                        )
-                        ,
-                    [&last_count] { return last_count == 0; }
-                );
-        });
+        return beman::execution::read_env(beman::execution::get_scheduler) |
+               beman::execution::let_value([this, last_count = std::size_t(1)](auto sched) mutable noexcept {
+                   (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being unused
+                   return beman::net::repeat_effect_until(
+                       beman::execution::just(),
+                       beman::execution::starts_on(
+                           sched,
+                           this->async_run_one() | beman::execution::then([&last_count](std::size_t count) noexcept {
+                               last_count = count;
+                           })),
+                       [&last_count]() noexcept { return last_count == 0; });
+               }) |
+               beman::execution::upon_error([](auto&&) noexcept {});
+        ;
     }
     ::std::size_t run_one() noexcept { return this->d_context.run_one(); }
     ::std::size_t run() {

@@ -50,8 +50,8 @@ struct beman::net::detail::context_base {
 
     virtual auto run_one() noexcept -> ::std::size_t = 0;
 
-    virtual auto cancel(::beman::net::detail::io_base*, ::beman::net::detail::io_base*) -> void = 0;
-    virtual auto schedule(::beman::net::detail::context_base::task*) -> void                    = 0;
+    virtual auto cancel(::beman::net::detail::io_base*, ::beman::net::detail::io_base*) -> void                   = 0;
+    virtual auto schedule(::beman::net::detail::context_base::task*) -> void                                      = 0;
     virtual auto poll(::beman::net::detail::context_base::poll_operation*) -> ::beman::net::detail::submit_result = 0;
     virtual auto accept(::beman::net::detail::context_base::accept_operation*)
         -> ::beman::net::detail::submit_result = 0;
