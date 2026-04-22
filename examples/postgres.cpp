@@ -66,7 +66,7 @@ struct exec {
         using operation_state_concept = ex::operation_state_t;
 
         struct env {
-            using error_types = ex::completion_signatures<ex::set_error_t(error)>;
+            using error_types = ex::completion_signatures<ex::set_error_t(error), ex::set_error_t(std::exception_ptr)>;
         };
         static ex::task<result, env> work(connection& conn, std::string query) noexcept {
             std::cout << "exec.work()\n";
@@ -146,14 +146,11 @@ int main() {
 
         auto spawn{[&](ex::sender auto s){
             ex::spawn(
-                ex::write_env(std::move(s), ex::env{ex::prop{ex::get_scheduler, loop.get_scheduler()}}),
+                ex::starts_on(loop.get_scheduler(), std::move(s))
+                | ex::upon_error([](auto&&) noexcept {})
+                ,
                 scope.get_token());
         }};
-        spawn(ex::read_env(ex::get_scheduler)
-            | ex::then([](auto&&)noexcept {})
-            | ex::upon_error([](auto&&)noexcept {})
-        );
-
 
         spawn(std::invoke([](auto sched)->ex::task<> {
             while (true) {
@@ -162,44 +159,43 @@ int main() {
             }
         }, io.get_scheduler()) | ex::upon_error([](auto&&) noexcept {}));
 
-#if 0
-        ex::sync_wait(ex::when_all(std::invoke([](auto sched)->ex::task<> {
-            while (true) {
-                std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
-                co_await net::resume_after(sched, 1s);
-            }
-        }, io.get_scheduler()),
-        io.async_run()));
-
-        if (false) {
+        if (true) {
         std::string query("select *, pg_sleep(0.5) from messages where 0 <= key and key < 3;");
-        spawn(pg::exec(conn, query) | ex::then([](pg::result res) noexcept {
+        spawn(pg::exec(conn, query)
+#if 0
+        | ex::then([](auto&&...) noexcept { std::cout << "query sent\n"; })
+#else
+        | ex::then([&](pg::result res, auto&&...) noexcept {
             for (int i{}, n{PQntuples(res.get())}; i < n; ++i) {
                 for (int j{}, m{PQnfields(res.get())}; j < m; ++j) {
                     std::cout << PQgetvalue(res.get(), i, j) << ',';
                 }
                 std::cout << '\n';
             }
-        }) | ex::upon_error([](pg::error error) noexcept {
-            std::cout << "error: " << error << "\n";
+            std::cout << "query done\n" << std::flush;
+            scope.request_stop();
+        })
+#endif
+        | ex::upon_error([](auto error) noexcept {
+            if constexpr (std::same_as<pg::error, decltype(error)>) {
+                std::cout << "query error: " << error << "\n";
+            } if constexpr (std::same_as<std::exception_ptr, decltype(error)>) {
+                std::cout << "exception\n";
+            } else {
+                std::cout << "unexpected error: " << error << "\n";
+            }
         }));
         }
-#endif
 
-
-
-
-        sync_run(loop,
-            io.async_run()
-            | ex::upon_error([](auto&&) noexcept {})
-            | ex::upon_stopped([]() noexcept {})
+        sync_run(loop, ex::when_all(
+            scope.join()
+                | ex::upon_error([](auto&&) noexcept {})
+            ,
+            io.async_run() | ex::then([]() noexcept { std::cout << "async_run done\n"; })
+                | ex::upon_error([](auto&&) noexcept {})
+        )
+        | ex::upon_stopped([]() noexcept {})
         );
-#if 0
-        sync_run(loop, ex::when_all(scope.join(), io.async_run() | ex::then([]() noexcept { std::cout << "async_run done\n"; }))
-            | ex::upon_error([](auto&&) noexcept {})
-            | ex::upon_stopped([]() noexcept {})
-        );
-#endif
     } catch (const pg::error& e) {
         std::cout << "Error: " << e << '\n';
     }
