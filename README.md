@@ -3,7 +3,7 @@
 <img src="https://github.com/bemanproject/beman/blob/main/images/logos/beman_logo-beman_library_under_development.png" style="width:5%; height:auto;">
 
 ![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
-![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
 [![Coverage](https://coveralls.io/repos/github/bemanproject/net/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/net?branch=main)
 
 `beman.net` provides senders for asynchronous network operations.
@@ -21,7 +21,7 @@ possible use various libraries for asynchronous operations like
 
 **Implements**: [Sender/Receiver Interface for Networking (P2762)](https://wg21.link/P2762)
 
-**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/BEMAN_LIBRARY_MATURITY_MODEL.md#under-development-and-not-yet-ready-for-production-use)
+**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
 
 ## Help Welcome!
 
@@ -62,6 +62,12 @@ The code is working on MacOS building with the system's
 It should hopefully also work on Linux but it isn't tested, yet.
 Windows isn't supported, yet, primarily because the relevant class
 for the networking operations are different.
+
+## License
+
+Source is licensed with the Apache License v2.0 with LLVM Exceptions.
+
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 ### Supported Platforms
 

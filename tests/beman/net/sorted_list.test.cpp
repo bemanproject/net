@@ -1,4 +1,4 @@
-// src/beman/net/tests/sorted_list.pass.cpp                           -*-C++-*-
+// tests/beman/net/sorted_list.test.cpp                               -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/net/detail/sorted_list.hpp>

@@ -38,4 +38,10 @@ repos:
         name: CMake linting
         exclude: ^.*/tests/.*/data/ # Exclude test data directories
 
+  # Beman Standard checking via beman-tidy
+  - repo: https://github.com/bemanproject/beman-tidy
+    rev: v0.4.0
+    hooks:
+      - id: beman-tidy
+
 exclude: 'infra/'
