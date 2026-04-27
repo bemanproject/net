@@ -41,7 +41,7 @@ int main() {
     std::cout << "populating from '" << input << "'\n";
     std::ifstream file(input);
     std::string   message;
-    for (std::size_t i{}; i < 100 && std::getline(file, message); ++i) {
+    for (std::size_t i{1}; i < 100 && std::getline(file, message); ++i) {
         std::ostringstream ins;
         ins << "insert into messages (key, message) values(" << i << ", '" << message << "');";
         std::cout << "inserting: " << ins.str() << '\n';

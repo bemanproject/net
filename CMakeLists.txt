@@ -18,9 +18,8 @@ option(
 option(
     BEMAN_NET_BUILD_EXAMPLES
     "Enable building examples. Default: ON. Values: { ON, OFF }."
-    TRUE
+    ${PROJECT_IS_TOP_LEVEL}
 )
-# ${PROJECT_IS_TOP_LEVEL}
 
 if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
@@ -32,7 +31,7 @@ FetchContent_Declare(
     task
     # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
-    GIT_TAG abbb977
+    GIT_TAG 6ff5b89
     FIND_PACKAGE_ARGS 0.2.0 EXACT NAMES beman.task COMPONENTS task_headers
 )
 FetchContent_MakeAvailable(task)
@@ -53,8 +52,6 @@ if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
 endif()
 
-message(NOTICE "Message test")
-set(BEMAN_NET_BUILD_EXAMPLES TRUE)
 if(${BEMAN_NET_BUILD_EXAMPLES})
     message(NOTICE "Building examples")
     add_subdirectory(examples)

@@ -30,12 +30,13 @@ set(EXAMPLES
     milano
     http-munich
     postgres
+    populate-postgres
     server
     taps
     task
 )
 set(xEXAMPLES taps)
-set(EXAMPLES postgres populate-postgres)
+set(xEXAMPLES postgres populate-postgres)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})

@@ -96,7 +96,7 @@ class beman::net::io_context {
     auto listen(::beman::net::detail::socket_id id, int no, ::std::error_code& error) {
         this->d_context.listen(id, no, error);
     }
-    auto get_scheduler() -> scheduler_type { return scheduler_type(&this->d_context); }
+    auto get_scheduler() noexcept -> scheduler_type { return scheduler_type(&this->d_context); }
 
     template <beman::execution::receiver Receiver>
     struct run_one_state {
