@@ -36,6 +36,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(task)
 
+include(CheckLibraryExists)
+set(POSTGRESROOT /Library/PostgreSQL/18)
+check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
+
 add_subdirectory(src/beman/net)
 
 #===============================================================================
