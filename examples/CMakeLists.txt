@@ -41,7 +41,6 @@ list(APPEND EXAMPLES
 )
 endif()
 set(xEXAMPLES taps)
-set(xEXAMPLES postgres populate-postgres)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})

@@ -43,7 +43,11 @@ struct error {
     friend std::ostream& operator<<(std::ostream& os, const error& err) { return os << err.msg; }
 };
 
-using result = std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })>;
+struct result {
+   std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })> res;
+   explicit result(PGresult* r): res(r) {}
+   operator PGresult*() const { return this->res.get(); }
+};
 
 // PQsetnonblocking(const PGconn *conn, int arg) - set non-blocking mode to avoid write blocks
 // PQsocket(const PGconn *conn) - get socket
@@ -86,7 +90,7 @@ struct exec {
                     co_yield ex::with_error(pg::error(conn));
                 }
             }
-            if (pg::result res{pg::result(PQgetResult(conn))}) {
+            if (pg::result res{PQgetResult(conn)}) {
                 co_return std::move(res);
             } else {
                 co_yield ex::with_error(pg::error(conn));
@@ -114,80 +118,7 @@ struct exec {
     std::string query;
 };
 
-inline constexpr double sleep_time = 3.0;
 } // namespace pg
-
-namespace {
-struct sync_run_env {
-    ex::run_loop& loop;
-    auto          query(const ex::get_scheduler_t&) const noexcept { return this->loop.get_scheduler(); }
-};
-struct sync_run_receiver {
-    ex::run_loop& loop;
-    using receiver_concept = ex::receiver_t;
-
-    auto get_env() const noexcept { return sync_run_env{this->loop}; }
-    auto set_value() noexcept { this->loop.finish(); }
-};
-auto sync_run(ex::run_loop& loop, ex::sender auto snd) {
-    auto state{ex::connect(std::move(snd), sync_run_receiver{loop})};
-    ex::start(state);
-    std::cout << "running loop\n";
-    loop.run();
-    std::cout << "running loop done\n";
-}
-
-template <typename>
-struct print_completion_signatures_t;
-template <typename... Signatures>
-struct print_completion_signatures_t<ex::completion_signatures<Signatures...>> {
-    void operator()(std::ostream& os) const { ((os << typeid(Signatures).name() << ','), ...); }
-};
-template <typename T>
-inline constexpr print_completion_signatures_t<T> print_completion_signatures{};
-
-struct print_completions_t {
-    template <ex::sender Sender>
-    struct sender {
-        using sender_concept = ex::sender_t;
-        template <typename, typename... Env>
-        static consteval auto get_completion_signatures() noexcept {
-            return ex::get_completion_signatures<Sender, Env...>();
-        }
-
-        template <typename Receiver>
-        struct state {
-            using operation_state_concept = ex::operation_state_t;
-            using state_t                 = ex::connect_result_t<Sender, Receiver&&>;
-            using env_t                   = ex::env_of_t<Receiver>;
-
-            state_t state_;
-            state(Receiver&& r, Sender&& s)
-                : state_(ex::connect(std::forward<Sender>(s), std::forward<Receiver>(r))) {}
-            auto start() noexcept -> void {
-                std::cout << "completion_signatures<";
-                print_completion_signatures<decltype(ex::get_completion_signatures<Sender, env_t>())>(std::cout);
-                std::cout << ">\n";
-                ex::start(this->state_);
-            }
-        };
-
-        std::remove_cvref_t<Sender> sender;
-        template <typename Receiver>
-        auto connect(Receiver&& r) && {
-            return state<Receiver>{std::forward<Receiver>(r), std::move(sender)};
-        }
-    };
-
-    template <typename Sender>
-    auto operator()(Sender&& sndr) const {
-        return sender<Sender>{std::forward<Sender>(sndr)};
-    }
-};
-
-[[maybe_unused]] inline constexpr print_completions_t print_completions{};
-
-} // namespace
 
 int main() {
     std::cout << std::unitbuf << "PostgreSQL example\n";
@@ -195,41 +126,40 @@ int main() {
         net::io_context    io;
         pg::connection     conn(io, PQconnectdb("user=sruser dbname=sruser"));
         ex::counting_scope scope;
-        ex::run_loop       loop;
 
         auto spawn{[&](ex::sender auto s) {
-            ex::spawn(ex::starts_on(loop.get_scheduler(), std::move(s)), scope.get_token());
+            ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token());
         }};
 
         struct noexcept_env {
             using error_types = ex::completion_signatures<>;
+            using scheduler_type = decltype(io.get_scheduler());
         };
 
-        spawn(ex::just());
         spawn(std::invoke(
-            [](auto sched) noexcept -> ex::task<void, noexcept_env> {
+            []() noexcept -> ex::task<void, noexcept_env> {
                 while (true) {
-                    std::cout << "\rtime=" << std::chrono::system_clock::now() << "\n" << std::flush;
-                    co_await net::resume_after(sched, 1s);
+                    std::cout << "time=" << std::chrono::system_clock::now() << "\n" << std::flush;
+                    co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 1s);
                 }
-            },
-            io.get_scheduler()));
+            }));
 
         std::string query("select *, pg_sleep(1.1) from messages where 0 <= key and key < 3;");
 
-        spawn(pg::exec(conn, query) | ex::then([&](pg::result res, auto&&...) noexcept {
-                  for (int i{}, n{PQntuples(res.get())}; i < n; ++i) {
-                      for (int j{}, m{PQnfields(res.get())}; j < m; ++j) {
-                          std::cout << PQgetvalue(res.get(), i, j) << ',';
-                      }
-                      std::cout << '\n';
-                  }
-                  std::cout << "query done\n" << std::flush;
-                  scope.request_stop();
-              }) |
-              ex::upon_error([](pg::error error) noexcept { std::cout << "query error: " << error << "\n"; }));
+        spawn(pg::exec(conn, query) | ex::then([](pg::result res) noexcept {
+                for (int i{}, n{PQntuples(res)}; i < n; ++i) {
+                    for (int j{}, m{PQnfields(res)}; j < m; ++j) {
+                        std::cout << PQgetvalue(res, i, j) << ',';
+                    }
+                    std::cout << '\n';
+                }
+                std::cout << "query done\n" << std::flush;
+            })
+            | ex::upon_error([](pg::error error) noexcept { std::cout << "query error: " << error << "\n"; })
+            | ex::then([&scope]() noexcept { scope.request_stop(); })
+        );
 
-        sync_run(loop, ex::when_all(scope.join(), io.async_run()) | ex::upon_stopped([]() noexcept {}));
+        ex::sync_wait(ex::when_all(scope.join(), io.async_run()) | ex::upon_stopped([]() noexcept {}));
     } catch (const pg::error& e) {
         std::cout << "Error: " << e << '\n';
     }
