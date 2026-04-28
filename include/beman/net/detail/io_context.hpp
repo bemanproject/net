@@ -68,6 +68,9 @@ class beman::net::io_context {
     io_context(::beman::net::detail::context_base& context) : d_owned(), d_context(context) {}
     io_context(io_context&&) = delete;
 
+    auto make_socket(::beman::net::detail::native_handle_type fd) -> ::beman::net::detail::socket_id {
+        return this->d_context.make_socket(fd);
+    }
     auto make_socket(int d, int t, int p, ::std::error_code& error) -> ::beman::net::detail::socket_id {
         return this->d_context.make_socket(d, t, p, error);
     }
@@ -93,7 +96,7 @@ class beman::net::io_context {
     auto listen(::beman::net::detail::socket_id id, int no, ::std::error_code& error) {
         this->d_context.listen(id, no, error);
     }
-    auto get_scheduler() -> scheduler_type { return scheduler_type(&this->d_context); }
+    auto get_scheduler() noexcept -> scheduler_type { return scheduler_type(&this->d_context); }
 
     template <beman::execution::receiver Receiver>
     struct run_one_state {
@@ -125,14 +128,20 @@ class beman::net::io_context {
 
     auto async_run_one() { return run_one_sender{this}; }
     auto async_run() {
-        return beman::execution::let_value(beman::execution::just(), [this, last_count = std::size_t(1)]() mutable {
-            (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being unused
-            return beman::net::repeat_effect_until(
-                beman::execution::just(),
-                [this] { return this->async_run_one(); }() |
-                    beman::execution::then([&last_count](std::size_t count) { last_count = count; }),
-                [&last_count] { return last_count == 0; });
-        });
+        return beman::execution::read_env(beman::execution::get_scheduler) |
+               beman::execution::let_value([this, last_count = std::size_t(1)](auto sched) mutable noexcept {
+                   (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being unused
+                   return beman::net::repeat_effect_until(
+                       beman::execution::just(),
+                       beman::execution::starts_on(
+                           sched,
+                           this->async_run_one() | beman::execution::then([&last_count](std::size_t count) noexcept {
+                               last_count = count;
+                           })),
+                       [&last_count]() noexcept { return last_count == 0; });
+               }) |
+               beman::execution::upon_error([](auto&&) noexcept {});
+        ;
     }
     ::std::size_t run_one() noexcept { return this->d_context.run_one(); }
     ::std::size_t run() {

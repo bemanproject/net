@@ -29,12 +29,16 @@ include(FetchContent)
 
 FetchContent_Declare(
     task
-    # FETCHCONTENT_SOURCE_DIR_TASK ${CMAKE_SOURCE_DIR}/../task
+    # SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
-    GIT_TAG 16a5916
+    GIT_TAG 6ff5b89
     FIND_PACKAGE_ARGS 0.2.0 EXACT NAMES beman.task COMPONENTS task_headers
 )
 FetchContent_MakeAvailable(task)
+
+include(CheckLibraryExists)
+set(POSTGRESROOT /Library/PostgreSQL/18)
+check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
 
 add_subdirectory(src/beman/net)
 
@@ -52,6 +56,7 @@ if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
 endif()
 
-if(BEMAN_NET_BUILD_EXAMPLES)
+if(${BEMAN_NET_BUILD_EXAMPLES})
+    message(NOTICE "Building examples")
     add_subdirectory(examples)
 endif()

@@ -33,6 +33,13 @@ set(EXAMPLES
     taps
     task
 )
+
+if(${HAS_POSTGRES})
+list(APPEND EXAMPLES
+    postgres
+    populate-postgres
+)
+endif()
 set(xEXAMPLES taps)
 
 foreach(EXAMPLE ${EXAMPLES})
@@ -42,6 +49,11 @@ foreach(EXAMPLE ${EXAMPLES})
         # XXX target_compile_definitions( ${EXAMPLE_TARGET} PRIVATE BEMAN_NET_USE_URING)
     endif()
     target_sources(${EXAMPLE_TARGET} PRIVATE ${EXAMPLE}.cpp)
+    if(${HAS_POSTGRES})
+        target_include_directories(${EXAMPLE_TARGET} PRIVATE ${POSTGRESROOT}/include)
+        target_link_directories(${EXAMPLE_TARGET} PRIVATE ${POSTGRESROOT}/lib)
+        target_link_libraries(${EXAMPLE_TARGET} PRIVATE pq)
+    endif()
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::net_headers)
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE beman::task_headers)
 endforeach()
