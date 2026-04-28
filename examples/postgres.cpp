@@ -23,7 +23,7 @@ struct connection {
     handle_t             handle;
     net::ip::tcp::socket socket;
     connection(net::io_context& io, PGconn* conn)
-        : handle(conn), socket(io.get_scheduler().get_context(), io.make_socket(PQsocket(handle.get()))) {
+        : handle(conn), socket(io, io.make_socket(PQsocket(handle.get()))) {
         if (PQstatus(conn) != CONNECTION_OK) {
             throw std::runtime_error(std::string("Connection to database failed: ") + PQerrorMessage(conn));
         }
