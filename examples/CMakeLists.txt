@@ -42,6 +42,7 @@ list(APPEND EXAMPLES
 endif()
 set(xEXAMPLES taps)
 set(EXAMPLES postgres-talk)
+set(EXAMPLES memory-stream)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
