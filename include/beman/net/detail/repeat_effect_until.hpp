@@ -12,11 +12,35 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
-struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_effect_until_t> {
+struct repeat_effect_until_t
+    : beman::execution::sender_adaptor_closure<repeat_effect_until_t>
+{
     template <beman::execution::sender Upstream, beman::execution::sender Body, typename Predicate>
     auto operator()(Upstream&& upstream, Body&& body, Predicate&& predicate) const {
         return sender<std::remove_cvref_t<Upstream>, std::remove_cvref_t<Body>, std::remove_cvref_t<Predicate>>{
             std::forward<Upstream>(upstream), std::forward<Body>(body), std::forward<Predicate>(predicate)};
+    }
+
+    template <beman::execution::sender Body, typename Predicate>
+    struct adaptor
+        : beman::execution::sender_adaptor_closure<adaptor<Body, Predicate>>
+    {
+        std::remove_cvref_t<Body> body;
+        std::remove_cvref_t<Predicate> predicate;
+        template <beman::execution::sender B, typename P>
+        adaptor(B&& b, P&& p): body(std::forward<B>(b)), predicate(std::forward<P>(p)) {}
+        template <beman::execution::sender Upstream>
+        auto operator()(Upstream&& upstream) && {
+            return repeat_effect_until_t{}(
+                std::forward<Upstream>(upstream),
+                std::move(this->body),
+                std::move(this->predicate)
+                );
+        }
+    };
+    template <beman::execution::sender Body, typename Predicate>
+    auto operator()(Body&& body, Predicate&& predicate) const {
+        return adaptor<Body, Predicate>{std::forward<Body>(body), std::forward<Predicate>(predicate)};
     }
 
     template <beman::execution::sender Upstream,

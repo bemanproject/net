@@ -41,6 +41,7 @@ list(APPEND EXAMPLES
 )
 endif()
 set(xEXAMPLES taps)
+set(EXAMPLES postgres-talk)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})

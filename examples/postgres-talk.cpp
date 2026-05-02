@@ -5,9 +5,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/net/net.hpp>
+#include <beman/net/detail/repeat_effect_until.hpp>
 #include <beman/execution/execution.hpp>
 #include <libpq-fe.h>
 #include "demo_algorithm.hpp"
+#include "demo_http.hpp"
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -43,8 +45,106 @@ namespace {
     }
 }
 
+namespace pg {
+struct connection {
+    std::unique_ptr<PGconn, decltype([](auto c){ PQfinish(c); })> conn;
+    net::ip::tcp::socket socket;
+    connection(net::io_context& io, PGconn* c):
+        conn(c? c: throw std::runtime_error("connection failed")),
+        socket(io, io.make_socket(PQsocket(conn.get()))) {}
+    operator PGconn*() const { return conn.get(); }
+};
+
+struct error {
+    std::string msg;
+};
+
+struct env {
+    using error_types = ex::completion_signatures<ex::set_error_t(pg::error)>;
+};
+
+struct result {
+    std::unique_ptr<PGresult, decltype([](auto r){ PQclear(r); })> res;
+    result(PGresult* r): res(r) {}
+    operator PGresult*() const { return res.get(); }
+};
+
+auto exec(pg::connection& conn, const char* query) {
+    return
+        ex::just()
+        | ex::then([&conn, query] noexcept { PQsendQuery(conn, query); })
+        | net::repeat_effect_until(
+            net::async_poll(conn.socket, net::event_type::out)
+            | ex::upon_error([](auto&&){})
+            | ex::then([](auto&&...) noexcept {}),
+            [&conn] noexcept { return not PQflush(conn); }
+          )
+        | net::repeat_effect_until(
+            net::async_poll(conn.socket, net::event_type::in)
+            | ex::upon_error([](auto&&){})
+            | ex::then([&conn](auto&&...) noexcept { PQconsumeInput(conn); }),
+            [&conn] noexcept { return !PQisBusy(conn); }
+          )
+        | ex::then([&conn] noexcept { return pg::result(PQgetResult(conn)); })
+        ;
+}
+ex::task<pg::result, pg::env> exec1(pg::connection& conn, const char* query) {
+    PQsendQuery(conn, query);
+    while (PQflush(conn)) {
+        co_await net::async_poll(conn.socket, net::event_type::out);
+    }
+    while (PQisBusy(conn)) {
+        co_await net::async_poll(conn.socket, net::event_type::in);
+        if (!PQconsumeInput(conn)) {
+            co_yield ex::with_error(pg::error(PQerrorMessage(conn)));
+        }
+    }
+    pg::result res(PQgetResult(conn));
+    if (!res) {
+        co_yield ex::with_error(pg::error(PQerrorMessage(conn)));
+    }
+    co_return std::move(res);
+}
+}
+
 // ----------------------------------------------------------------------------
 
 auto main() -> int {
     std::cout << std::unitbuf << "Postgres Example\n";
+    net::io_context io;
+    pg::connection conn(io, PQconnectdb(connection_string.c_str()));
+    ex::counting_scope scope;
+    auto spawn{[&](ex::sender auto s){
+        ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token());
+    }};
+
+    spawn(demo::http_server(io, 12345, [&spawn](auto client) noexcept {
+        std::cout << "got a client\n";
+        spawn([](auto client)->ex::task<void, demo::http::no_error_env>{
+            std::cout << "reading request\n";
+            co_await client.request();
+            std::cout << "client done\n";
+        }(std::move(client)));
+    }));
+
+    struct io_env {
+        using scheduler_type = decltype(io.get_scheduler());
+        using error_types = ex::completion_signatures<>;
+    };
+
+    spawn([]()->ex::task<void, io_env> {
+        while (true) {
+            std::cout << "time=" << std::chrono::system_clock::now() << "\n";
+            co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 100s);
+        }
+    }());
+    if (false) {
+    spawn([](auto& conn, auto& ) noexcept ->ex::task<void, io_env> {
+        pg::result res{co_await pg::exec(conn, query.c_str())};
+        print_result(res);
+        //scope.request_stop();
+    }(conn, scope));
+    }
+
+    ex::sync_wait(ex::when_all(io.async_run(), scope.join()));
 }
