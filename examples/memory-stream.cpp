@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "demo_stream.hpp"
+#include "demo_http.hpp"
 #include <beman/net/net.hpp>
 #include <beman/net/detail/repeat_effect_until.hpp>
 #include <beman/execution/execution.hpp>
@@ -20,21 +21,18 @@ namespace net = ::beman::net;
 int main() {
     std::cout << std::unitbuf;
     demo::context context;
-    context.add("foo", [data=std::string_view("hello, world!")](demo::memory_base& s) mutable {
-        std::size_t n{s.add_receive_data(data.substr(0, std::min(std::size_t(2), data.size())))};
-        if (n == 0u) {
-            return true;
+    std::string   request("GET /some/url HTTP/1.1\r\nHost: localhost:12345\r\nUser-Agent: memory/0.0\r\nAccept: */*\r\n\r\n");
+    context.add("foo", [data=std::string_view(request)](demo::memory_base& s) mutable {
+        if (std::size_t n{s.add_receive_data(data.substr(0, std::min(std::size_t(2), data.size())))}) {
+            data = data.substr(n);
+            return false;
         }
-        data = data.substr(n);
-        return false;
+        return true;
     });
-    auto reader{[](demo::context& context)->ex::task<> {
-        demo::memory mem(context, "foo");
-        std::array<char, 10> buffer;
-        while (std::size_t n = co_await mem.receive(net::buffer(buffer))) {
-            std::cout << "stream received=" << std::string_view(buffer.begin(), n) << "\n";
-        }
-    }(context)};
+
+    auto reader{[](auto client)->ex::task<> {
+        co_await client.request();
+    }(demo::http_client(demo::mem_stream(context, "foo")))};
 
    ex::sync_wait(ex::when_all(context.async_run(), std::move(reader)));
 }

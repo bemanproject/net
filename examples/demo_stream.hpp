@@ -42,7 +42,7 @@ namespace demo::stream {
         void next() {
             auto& update = updates[next_index];
             memory_base* stream = streams[update.first];
-            if (stream && update.second(*stream)) {
+            if (stream == nullptr || update.second(*stream)) {
                 this->updates.erase(this->updates.begin() + next_index);
             }
             else if (this->updates.size() == ++this->next_index) {
@@ -124,49 +124,49 @@ namespace demo::stream {
         }
     };
 
-    template <typename Socket>
+    template <typename Stream>
     struct basic_buffered {
         using buffer_t = ::std::array<char, 1024>;
         using buffer_iterator = typename buffer_t::iterator;
 
-        Socket          socket;
+        Stream          stream;
         buffer_t        buffer{};
         buffer_iterator it{buffer.begin()};
-        buffer_iterator end{buffer.end()};
+        buffer_iterator end{buffer.begin()};
 
+        template <typename... Args>
+        basic_buffered(Args&&... args): stream(std::forward<Args>(args)...) {}
         static constexpr std::size_t length(char) { return 1u; }
         bool consume(auto& to, char sentinel) {
             auto end{::std::find(this->it, this->end, sentinel)};
             to.insert(to.end(), this->it, end);
             this->it = end;
-            return this->it == this->end;
+            return end == this->end;
         }
         template <::std::size_t Size>
         static constexpr std::size_t length(const char (&)[Size]) { return Size - 1u; }
         template <::std::size_t Size>
         bool consume(auto& to, const char (&sentinel)[Size]) {
             auto end{::std::search(this->it, this->end, sentinel, sentinel + Size - 1)};
-            if (end == this->end) {
-                end -= std::min(std::size_t(end - this->it), Size);
-                to.insert(to.end(), this->it, end);
-                this->it = this->buffer.begin();
-                this->end = std::move(end, this->end, this->it);
-                return true;
+            bool rc(end == this->end);
+            if (rc) {
+                end -= std::min(std::size_t(std::distance(this->it, end)), Size);
             }
-            else {
-                to.insert(to.end(), this->it, end);
-                this->it = end;
-                return false;
-            }
+            to.insert(to.end(), this->it, end);
+            this->it = end;
+            return rc;
         }
         auto read(auto& to, const auto& sentinel)->ex::task<bool> {
             while (this->consume(to, sentinel)) {
-                this->it = this->buffer.begin();
-                std::size_t n{co_await net::async_receive(this->socket, net::buffer(this->buffer))};
+                if (std::distance(this->end, this->buffer.end()) < this->buffer.size() / 2) {
+                    this->end = std::move(this->it, this->end, this->buffer.begin());
+                    this->it  = this->buffer.begin();
+                }
+                std::size_t n{co_await this->stream.receive(net::buffer(std::string_view(this->end, this->buffer.end())))};
                 if (n == 0) {
                     co_return false;
                 }
-                this->end = this->it + n;
+                this->end += n;
             }
             this->it += length(sentinel);
 
