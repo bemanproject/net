@@ -250,10 +250,10 @@ struct demo::when_any_t::state_env_base {
 
 template <typename Receiver>
 struct demo::when_any_t::state_base : demo::when_any_t::state_env_base<ex::env_of_t<Receiver>> {
-    ::std::size_t                   total;
-    Receiver                        receiver;
-    ::std::atomic<::std::size_t>    done_count{};
-    ::std::atomic<::std::size_t>    ready_count{};
+    ::std::size_t                total;
+    Receiver                     receiver;
+    ::std::atomic<::std::size_t> done_count{};
+    ::std::atomic<::std::size_t> ready_count{};
 
     auto get_receiver_env() const noexcept -> ex::env_of_t<Receiver> override { return ex::get_env(this->receiver); }
     template <typename R>

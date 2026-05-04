@@ -90,7 +90,7 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
     };
     template <beman::execution::sender Upstream, beman::execution::sender Body, typename Predicate>
     struct sender {
-        using sender_concept = beman::execution::sender_t;
+        using sender_concept        = beman::execution::sender_t;
         using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
         template <typename, typename... Env>
         static consteval auto get_completion_signatures() {

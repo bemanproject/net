@@ -308,6 +308,9 @@ struct iocp_context final : context_base {
         ::PostQueuedCompletionStatus(iocp_handle, 0, 0, nullptr);
     }
 
+    auto poll(poll_operation* op) -> submit_result override {
+        return submit_result{}; //-dk:TODO
+    }
     auto accept(accept_operation* op) -> submit_result override {
         SOCKET listen_socket = static_cast<SOCKET>(native_handle(op->id));
         int    family        = sockets[op->id].address_family;

@@ -35,11 +35,7 @@ set(EXAMPLES
 )
 
 if(${HAS_POSTGRES})
-list(APPEND EXAMPLES
-    postgres
-    postgres-talk
-    populate-postgres
-)
+    list(APPEND EXAMPLES postgres postgres-talk populate-postgres)
 endif()
 set(xEXAMPLES taps)
 set(xEXAMPLES memory-stream)
@@ -53,7 +49,10 @@ foreach(EXAMPLE ${EXAMPLES})
     endif()
     target_sources(${EXAMPLE_TARGET} PRIVATE ${EXAMPLE}.cpp)
     if(${HAS_POSTGRES})
-        target_include_directories(${EXAMPLE_TARGET} PRIVATE ${POSTGRESROOT}/include)
+        target_include_directories(
+            ${EXAMPLE_TARGET}
+            PRIVATE ${POSTGRESROOT}/include
+        )
         target_link_directories(${EXAMPLE_TARGET} PRIVATE ${POSTGRESROOT}/lib)
         target_link_libraries(${EXAMPLE_TARGET} PRIVATE pq)
     endif()

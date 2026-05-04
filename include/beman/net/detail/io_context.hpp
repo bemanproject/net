@@ -136,7 +136,7 @@ class beman::net::io_context {
                    beman::execution::read_env(beman::execution::get_scheduler) |
                        beman::execution::let_value([this, last_count = std::size_t(1)](auto sched) mutable noexcept {
                            (void)last_count; //-dk:TODO remove this once no compiler complains about last_count being
-                                             //unused
+                                             // unused
                            return beman::net::repeat_effect_until(
                                beman::execution::just(),
                                beman::execution::starts_on(
