@@ -26,6 +26,7 @@ struct beman::net::detail::context_base {
         virtual auto complete() -> void = 0;
     };
 
+    using poll_operation   = ::beman::net::detail::io_operation<::std::tuple<int, ::beman::net::event_type>>;
     using accept_operation = ::beman::net::detail::io_operation<
         ::std::tuple<::beman::net::detail::endpoint, ::socklen_t, ::std::optional<::beman::net::detail::socket_id>>>;
     using connect_operation = ::beman::net::detail::io_operation<::std::tuple<::beman::net::detail::endpoint>>;
@@ -49,8 +50,9 @@ struct beman::net::detail::context_base {
 
     virtual auto run_one() noexcept -> ::std::size_t = 0;
 
-    virtual auto cancel(::beman::net::detail::io_base*, ::beman::net::detail::io_base*) -> void = 0;
-    virtual auto schedule(::beman::net::detail::context_base::task*) -> void                    = 0;
+    virtual auto cancel(::beman::net::detail::io_base*, ::beman::net::detail::io_base*) -> void                   = 0;
+    virtual auto schedule(::beman::net::detail::context_base::task*) -> void                                      = 0;
+    virtual auto poll(::beman::net::detail::context_base::poll_operation*) -> ::beman::net::detail::submit_result = 0;
     virtual auto accept(::beman::net::detail::context_base::accept_operation*)
         -> ::beman::net::detail::submit_result = 0;
     virtual auto connect(::beman::net::detail::context_base::connect_operation*)

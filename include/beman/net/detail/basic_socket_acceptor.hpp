@@ -59,8 +59,9 @@ class beman::net::basic_socket_acceptor : public ::beman::net::socket_base {
     }
     basic_socket_acceptor(::beman::net::io_context&, const protocol_type&, const native_handle_type&);
     basic_socket_acceptor(const basic_socket_acceptor&) = delete;
-    basic_socket_acceptor(basic_socket_acceptor&& other)
+    basic_socket_acceptor(basic_socket_acceptor&& other) noexcept
         : ::beman::net::socket_base(),
+          d_context(other.d_context),
           d_protocol(other.d_protocol),
           d_id(::std::exchange(other.d_id, ::beman::net::detail::socket_id::invalid)) {}
     template <typename OtherProtocol>

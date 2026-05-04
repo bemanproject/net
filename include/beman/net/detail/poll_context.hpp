@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include <iostream> //-dk:TODO remove
 
 // ----------------------------------------------------------------------------
 
@@ -199,6 +200,16 @@ struct beman::net::detail::poll_context final : ::beman::net::detail::context_ba
     auto schedule(::beman::net::detail::context_base::task* tsk) -> void override {
         tsk->next     = this->d_tasks;
         this->d_tasks = tsk;
+    }
+    auto poll(::beman::net::detail::context_base::poll_operation* op)
+        -> ::beman::net::detail::submit_result override final {
+        op->context = this;
+        op->work    = [](::beman::net::detail::context_base&, ::beman::net::detail::io_base* o) {
+            auto& cmp(*static_cast<poll_operation*>(o));
+            cmp.complete();
+            return ::beman::net::detail::submit_result::submit;
+        };
+        return this->add_outstanding(op);
     }
     auto accept(::beman::net::detail::context_base::accept_operation* completion)
         -> ::beman::net::detail::submit_result override final {

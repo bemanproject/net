@@ -21,8 +21,8 @@ class beman::net::basic_socket : public ::beman::net::socket_base {
 
   private:
     ::beman::net::detail::context_base* d_context;
-    protocol_type                       d_protocol{::beman::net::ip::tcp::v6()};
-    ::beman::net::detail::socket_id     d_id{::beman::net::detail::socket_id::invalid};
+    protocol_type d_protocol{::beman::net::ip::tcp::v6()}; //-dk:TODO should initialize based on protocol_type
+    ::beman::net::detail::socket_id d_id{::beman::net::detail::socket_id::invalid};
 
   public:
     basic_socket() : d_context(nullptr) {}

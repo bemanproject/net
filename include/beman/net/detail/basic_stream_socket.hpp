@@ -29,6 +29,8 @@ class beman::net::basic_stream_socket : public basic_socket<Protocol> {
     basic_stream_socket& operator=(basic_stream_socket&&) = default;
     basic_stream_socket(::beman::net::detail::context_base* context, ::beman::net::detail::socket_id id)
         : basic_socket<Protocol>(context, id) {}
+    basic_stream_socket(::beman::net::io_context& context, ::beman::net::detail::socket_id id)
+        : basic_socket<Protocol>(context.get_scheduler().get_context(), id) {}
     basic_stream_socket(::beman::net::io_context& context, const endpoint_type& endpoint)
         : beman::net::basic_socket<Protocol>(
               context.get_scheduler().get_context(), ::std::invoke([p = endpoint.protocol(), &context] {
