@@ -118,6 +118,10 @@ class beman::net::io_context {
         using completion_signatures =
             ::beman::execution::completion_signatures<::beman::execution::set_value_t(std::size_t),
                                                       ::beman::execution::set_stopped_t()>;
+        template <typename...>
+        static consteval auto get_completion_signatures() {
+            return completion_signatures{};
+        }
 
         beman::net::io_context* _context;
         template <beman::execution::receiver Receiver>

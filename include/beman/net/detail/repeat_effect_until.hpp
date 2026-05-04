@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_NET_DETAIL_REPEAT_EFFECT_UNTIL
 
 #include <beman/execution/execution.hpp>
+#include <beman/net/detail/merge_completion_signatures.hpp>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -98,14 +99,22 @@ struct repeat_effect_until_t
     struct sender {
         using sender_concept = beman::execution::sender_t;
         using completion_signatures =
-            beman::execution::completion_signatures<
-                //beman::execution::set_stopped(),
-                //-dk:TODO add error types of upstream and body
-                //-dk:TODO add stopped only if upstream or body can be stopped
-                beman::execution::set_value_t()>;
+            beman::execution::completion_signatures<beman::execution::set_value_t()>;
         template <typename... Env>
-        static constexpr auto get_completion_signatures() -> completion_signatures {
-            return {};
+        static consteval auto get_completion_signatures() {
+            return net::detail::merge_completion_signatures<
+               completion_signatures,
+               ex::error_types_of_t<Body, ex::env<>, ex::completion_signatures>,
+               ex::error_types_of_t<Upstream, ex::env<>, ex::completion_signatures>,
+               std::conditional_t<ex::sends_stopped<Body> || ex::sends_stopped<Upstream>,
+                   ex::completion_signatures<ex::set_stopped_t()>,
+                   ex::completion_signatures<>
+                   >,
+                std::conditional_t<noexcept(std::declval<Predicate>()()),
+                   ex::completion_signatures<>,
+                   ex::completion_signatures<ex::set_error_t(std::exception_ptr)>
+                   >
+            >();
         }
 
         Upstream  upstream;

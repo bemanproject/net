@@ -27,6 +27,7 @@ using ::beman::execution::detail::decayed_tuple;
 using ::beman::execution::env;
 using ::beman::execution::env_of_t;
 using ::beman::execution::error_types_of_t;
+using ::beman::execution::sends_stopped;
 using ::beman::execution::get_env;
 using ::beman::execution::value_types_of_t;
 
