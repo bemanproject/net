@@ -58,7 +58,7 @@ struct result {
 // PQsetChunkedMode(PGconn *conn, int arg) - set chunked mode, return 0 on failure
 
 struct exec {
-    using sender_concept        = ex::sender_t;
+    using sender_concept        = ex::sender_tag;
     using completion_signatures = ex::completion_signatures<ex::set_value_t(result), ex::set_error_t(error)>;
     template <typename...>
     static consteval completion_signatures get_completion_signatures() noexcept {
@@ -67,7 +67,7 @@ struct exec {
 
     template <typename Receiver>
     struct state {
-        using operation_state_concept = ex::operation_state_t;
+        using operation_state_concept = ex::operation_state_tag;
 
         struct env {
             using error_types = ex::completion_signatures<ex::set_error_t(error)>;

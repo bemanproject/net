@@ -166,7 +166,7 @@ inline constexpr when_any_t when_any{};
 
 template <demo::ex::receiver Receiver, typename Fun>
 struct demo::into_error_t::receiver {
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
 
     Receiver receiver;
     Fun      fun;
@@ -184,7 +184,7 @@ struct demo::into_error_t::receiver {
 
 template <demo::ex::sender Sender, typename Fun>
 struct demo::into_error_t::sender {
-    using sender_concept = ex::sender_t;
+    using sender_concept = ex::sender_tag;
     template <typename, typename... Env>
     static consteval auto get_completion_signatures() {
         // static_assert(sizeof...(Env) <= 1u);
@@ -320,7 +320,7 @@ struct demo::when_any_t::env {
 
 template <::std::size_t, ::demo::ex::receiver Receiver, typename Value, typename Error>
 struct demo::when_any_t::receiver {
-    using receiver_concept = ::demo::ex::receiver_t;
+    using receiver_concept = ::demo::ex::receiver_tag;
     demo::when_any_t::state_value<Receiver, Value, Error>* state;
 
     auto get_env() const noexcept -> demo::when_any_t::env<ex::env_of_t<Receiver>> { return {this->state}; }
@@ -355,7 +355,7 @@ struct demo::when_any_t::state<::std::index_sequence<I...>, Receiver, Value, Err
 
     template <::std::size_t J>
     using receiver_type           = when_any_t::receiver<J, Receiver, value_type, error_type>;
-    using operation_state_concept = ex::operation_state_t;
+    using operation_state_concept = ex::operation_state_tag;
     using states_type             = ::beman::execution::detail::product_type<decltype(demo::ex::connect(
         ::std::declval<Sender>(), ::std::declval<receiver_type<I>>()))...>;
     states_type states;
@@ -374,7 +374,7 @@ struct demo::when_any_t::state<::std::index_sequence<I...>, Receiver, Value, Err
 template <demo::ex::sender... Sender>
 struct demo::when_any_t::sender {
     ::beman::execution::detail::product_type<::std::remove_cvref_t<Sender>...> sender;
-    using sender_concept = ex::sender_t;
+    using sender_concept = ex::sender_tag;
     template <typename, typename Env>
     static consteval auto get_completion_signatures() {
         return ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::combine<

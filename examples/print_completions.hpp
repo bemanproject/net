@@ -13,7 +13,7 @@ inline constexpr print_completion_signatures_t<T> print_completion_signatures{};
 struct print_completions_t {
     template <ex::sender Sender>
     struct sender {
-        using sender_concept = ex::sender_t;
+        using sender_concept = ex::sender_tag;
         template <typename, typename... Env>
         static consteval auto get_completion_signatures() noexcept {
             return ex::get_completion_signatures<Sender, Env...>();
@@ -21,7 +21,7 @@ struct print_completions_t {
 
         template <typename Receiver>
         struct state {
-            using operation_state_concept = ex::operation_state_t;
+            using operation_state_concept = ex::operation_state_tag;
             using state_t                 = ex::connect_result_t<Sender, Receiver&&>;
             using env_t                   = ex::env_of_t<Receiver>;
 

@@ -43,13 +43,13 @@ using ::beman::execution::get_stop_token;
 using ::beman::execution::get_stop_token_t;
 
 using ::beman::execution::operation_state;
-using ::beman::execution::operation_state_t;
+using ::beman::execution::operation_state_tag;
 using ::beman::execution::receiver;
-using ::beman::execution::receiver_t;
+using ::beman::execution::receiver_tag;
 using ::beman::execution::scheduler;
-using ::beman::execution::scheduler_t;
+using ::beman::execution::scheduler_tag;
 using ::beman::execution::sender;
-using ::beman::execution::sender_t;
+using ::beman::execution::sender_tag;
 
 using ::beman::execution::sender_in;
 

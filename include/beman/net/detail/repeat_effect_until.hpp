@@ -43,7 +43,7 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
               beman::execution::receiver Receiver>
     struct state {
         struct receiver {
-            using receiver_concept = beman::execution::receiver_t;
+            using receiver_concept = beman::execution::receiver_tag;
             state* _state;
             auto   get_env() const noexcept -> beman::execution::env_of_t<Receiver>;
             auto   set_value() && noexcept -> void;
@@ -51,7 +51,7 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
             auto set_error(Error&& e) && noexcept -> void;
             auto set_stopped() && noexcept -> void;
         };
-        using operation_state_concept = beman::execution::operation_state_t;
+        using operation_state_concept = beman::execution::operation_state_tag;
         using upstream_state          = beman::execution::connect_result_t<Upstream, receiver>;
         using body_state              = beman::execution::connect_result_t<Body, receiver>;
         struct connector {
@@ -90,7 +90,7 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
     };
     template <beman::execution::sender Upstream, beman::execution::sender Body, typename Predicate>
     struct sender {
-        using sender_concept        = beman::execution::sender_t;
+        using sender_concept        = beman::execution::sender_tag;
         using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
         template <typename, typename... Env>
         static consteval auto get_completion_signatures() {

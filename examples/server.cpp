@@ -43,7 +43,7 @@ auto make_client(auto client) -> demo::task<void> {
 }
 
 struct receiver {
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
     auto set_error(auto&&) && noexcept -> void {}
     auto set_stopped() && noexcept -> void {}
     auto set_value(auto&&...) && noexcept -> void {}
