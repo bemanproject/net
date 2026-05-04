@@ -141,6 +141,8 @@ struct when_any_t {
     template <typename>
     struct env;
     template <typename>
+    struct state_env_base;
+    template <typename>
     struct state_base;
     template <ex::receiver, typename, typename>
     struct state_value;
@@ -183,7 +185,7 @@ struct demo::into_error_t::receiver {
 template <demo::ex::sender Sender, typename Fun>
 struct demo::into_error_t::sender {
     using sender_concept = ex::sender_t;
-    template <typename... Env>
+    template <typename, typename... Env>
     static consteval auto get_completion_signatures() {
         // static_assert(sizeof...(Env) <= 1u);
         if constexpr (sizeof...(Env) <= 1)
@@ -238,16 +240,32 @@ inline auto demo::into_expected_t::operator()(Sender&& s) const {
 
 // ----------------------------------------------------------------------------
 
+template <typename Env>
+struct demo::when_any_t::state_env_base {
+    virtual auto get_receiver_env() const noexcept -> Env = 0;
+    ::demo::ex::inplace_stop_source source{};
+};
+
+// ----------------------------------------------------------------------------
+
 template <typename Receiver>
-struct demo::when_any_t::state_base {
-    ::std::size_t                   total{};
-    Receiver                        receiver{};
+struct demo::when_any_t::state_base
+    : demo::when_any_t::state_env_base<ex::env_of_t<Receiver>>
+{
+    ::std::size_t                   total;
+    Receiver                        receiver;
     ::std::atomic<::std::size_t>    done_count{};
     ::std::atomic<::std::size_t>    ready_count{};
-    ::demo::ex::inplace_stop_source source{};
 
+    auto get_receiver_env() const noexcept -> ex::env_of_t<Receiver> override {
+        return ex::get_env(this->receiver);
+    }
     template <typename R>
-    state_base(std::size_t tot, R&& rcvr) : total(tot), receiver(::std::forward<R>(rcvr)) {}
+    state_base(::std::size_t tot, R&& r)
+        : total(tot)
+        , receiver(std::forward<R>(r))
+    {
+    }
     virtual ~state_base() = default;
     auto complete() -> bool {
         if (0u == this->done_count++) {
@@ -292,13 +310,20 @@ struct demo::when_any_t::state_value : demo::when_any_t::state_base<Receiver> {
 
 // ----------------------------------------------------------------------------
 
-template <typename Receiver>
+template <typename Env>
 struct demo::when_any_t::env {
-    demo::when_any_t::state_base<Receiver>* state;
+    demo::when_any_t::state_env_base<Env>* state;
+
     auto query(const ex::get_stop_token_t&) const noexcept -> ex::inplace_stop_token {
         return this->state->source.get_token();
     }
-    //-dk:TODO when_any_t::env: set up query forwarding
+    template <typename Query>
+        requires requires(const Query& q, const Env& e) {
+            q(e);
+        }
+    auto query(const Query& q) const noexcept {
+        return q(this->state->get_receiver_env());
+    }
 };
 
 // ----------------------------------------------------------------------------
@@ -308,7 +333,9 @@ struct demo::when_any_t::receiver {
     using receiver_concept = ::demo::ex::receiver_t;
     demo::when_any_t::state_value<Receiver, Value, Error>* state;
 
-    auto get_env() const noexcept -> env<Receiver> { return {this->state}; }
+    auto get_env() const noexcept -> demo::when_any_t::env<ex::env_of_t<Receiver>> {
+        return {this->state};
+    }
     template <typename E>
     auto set_error(E&& error) && noexcept -> void {
         if (this->state->complete()) {
@@ -349,7 +376,8 @@ struct demo::when_any_t::state<::std::index_sequence<I...>, Receiver, Value, Err
     state(R&& rcvr, P&& s)
         : state_value<Receiver, value_type, error_type>(sizeof...(Sender), ::std::forward<R>(rcvr)),
           states{demo::ex::connect(::beman::net::detail::ex::detail::forward_like<P>(s.template get<I>()),
-                                   receiver_type<I>{this})...} {}
+                                   receiver_type<I>{this})...} {
+    }
     state(state&&) = delete;
     auto start() & noexcept -> void { (demo::ex::start(this->states.template get<I>()), ...); }
 };
@@ -360,26 +388,27 @@ template <demo::ex::sender... Sender>
 struct demo::when_any_t::sender {
     ::beman::execution::detail::product_type<::std::remove_cvref_t<Sender>...> sender;
     using sender_concept = ex::sender_t;
-    template <typename Env>
+    template <typename, typename Env>
     static consteval auto get_completion_signatures() {
         return ::beman::execution::detail::meta::unique<
-            ::beman::execution::detail::meta::combine<decltype(ex::get_completion_signatures<Sender, Env>())...>>();
+            ::beman::execution::detail::meta::combine<decltype(ex::get_completion_signatures<Sender, when_any_t::env<Env>>())...>>();
     }
 
     template <demo::ex::receiver Receiver>
-    auto connect(Receiver&& receiver) && -> state<
+    auto connect(Receiver&& receiver) && {
+        using completion_signatures = decltype(ex::get_completion_signatures<std::remove_cvref_t<decltype(*this)>, decltype(ex::get_env(receiver))>());
+        return state<
         ::std::index_sequence_for<Sender...>,
         ::std::remove_cvref_t<Receiver>,
         demo::detail::variant_from_list_t<ex::detail::transform<
             demo::detail::decayed_set_value_t,
             demo::detail::make_type_list_t<ex::detail::filter<
                 demo::detail::is_set_value,
-                decltype(ex::get_completion_signatures<decltype(*this), decltype(ex::get_env(receiver))>())>>>>,
+                completion_signatures>>>>,
         demo::detail::variant_from_list_t<ex::detail::filter<
             demo::detail::is_set_error,
-            decltype(ex::get_completion_signatures<decltype(*this), decltype(ex::get_env(receiver))>())>>,
-        Sender...> {
-        return {::std::forward<Receiver>(receiver), ::std::move(this->sender)};
+            completion_signatures>>,
+        Sender...> {::std::forward<Receiver>(receiver), ::std::move(this->sender)};
     }
 };
 

@@ -74,6 +74,7 @@ using ::beman::execution::then;
 using ::beman::execution::upon_error;
 using ::beman::execution::upon_stopped;
 using ::beman::execution::write_env;
+using ::beman::execution::inline_scheduler;
 } // namespace beman::net::detail::ex
 
 // ----------------------------------------------------------------------------

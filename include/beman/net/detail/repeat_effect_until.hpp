@@ -100,7 +100,7 @@ struct repeat_effect_until_t
         using sender_concept = beman::execution::sender_t;
         using completion_signatures =
             beman::execution::completion_signatures<beman::execution::set_value_t()>;
-        template <typename... Env>
+        template <typename, typename... Env>
         static consteval auto get_completion_signatures() {
             return net::detail::merge_completion_signatures<
                completion_signatures,

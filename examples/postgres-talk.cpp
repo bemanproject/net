@@ -121,6 +121,7 @@ auto main() -> int {
         ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token());
     }};
 
+#if 0
     spawn(demo::http_server(io, 12345, [&spawn](auto client) noexcept {
         std::cout << "got a client\n";
         spawn([](auto client)->ex::task<void, demo::http::no_error_env>{
@@ -129,37 +130,47 @@ auto main() -> int {
             std::cout << "client done\n";
         }(std::move(client)));
     }));
+#endif
 
     struct io_env {
         using scheduler_type = decltype(io.get_scheduler());
         using error_types = ex::completion_signatures<>;
     };
 
-    spawn([]()->ex::task<void, io_env> {
+    auto timer{[]()->ex::task<void, io_env> {
         while (true) {
             std::cout << "time=" << std::chrono::system_clock::now() << "\n";
             co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 1s);
         }
-    }());
-    if (false) {
-    spawn([](auto& conn, auto& ) noexcept ->ex::task<void, io_env> {
-        pg::result res{co_await pg::exec(conn, query.c_str())};
-        print_result(res);
-        //scope.request_stop();
-    }(conn, scope));
+    }()};
+
+    auto request{
+        pg::exec2(conn, query.c_str())
+        | ex::then(print_result)
+        | ex::upon_error([](pg::error e) noexcept {
+            std::cout << "database error=" << e << "\n";
+        })
+    };
+
+    if constexpr (false) {
+        spawn(std::move(timer));
+        spawn(std::move(request) | ex::then([&scope]noexcept{ scope.request_stop(); }));
+        ex::sync_wait(ex::when_all(io.async_run(), scope.join()));
+    }
+    else if constexpr (false) {
+        ex::inplace_stop_source source;
+        ex::sync_wait(ex::when_all(
+            io.async_run(),
+            ex::starts_on(io.get_scheduler(),
+                ex::write_env(std::move(timer), ex::env{ex::prop{ex::get_stop_token, source.get_token()}})),
+            std::move(request) | ex::then([&source]noexcept{ source.request_stop(); })
+            ));
     }
     else {
-        spawn(
-            pg::exec2(conn, query.c_str())
-            //ex::just(pg::result(nullptr))
-            //| ex::then([](auto) noexcept {})
-            | ex::then(print_result)
-            //| ex::upon_error([](auto) noexcept {})
-            | ex::upon_error([](pg::error e) noexcept {
-                std::cout << "database error=" << e << "\n";
-            })
-            );
+        ex::sync_wait(demo::when_any(
+            io.async_run(),
+            std::move(request),
+            ex::starts_on(io.get_scheduler(), std::move(timer))
+            ));
     }
-
-    ex::sync_wait(ex::when_all(io.async_run(), scope.join()));
 }
