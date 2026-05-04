@@ -98,10 +98,11 @@ struct repeat_effect_until_t
     struct sender {
         using sender_concept = beman::execution::sender_t;
         using completion_signatures =
-            beman::execution::completion_signatures<beman::execution::set_value_t(),
-                                                    //-dk:TODO add error types of upstream and body
-                                                    //-dk:TODO add stopped only if upstream or body can be stopped
-                                                    beman::execution::set_stopped_t()>;
+            beman::execution::completion_signatures<
+                //beman::execution::set_stopped(),
+                //-dk:TODO add error types of upstream and body
+                //-dk:TODO add stopped only if upstream or body can be stopped
+                beman::execution::set_value_t()>;
         template <typename... Env>
         static constexpr auto get_completion_signatures() -> completion_signatures {
             return {};
@@ -112,7 +113,7 @@ struct repeat_effect_until_t
         Predicate predicate;
 
         template <beman::execution::receiver Receiver>
-        auto connect(Receiver&& receiver) {
+        auto connect(Receiver&& receiver) noexcept(std::is_nothrow_constructible_v<std::remove_cvref_t<Receiver>, Receiver>) {
             return state<Upstream, Body, Predicate, std::remove_cvref_t<Receiver>>{std::move(this->upstream),
                                                                                    std::move(this->body),
                                                                                    std::move(this->predicate),

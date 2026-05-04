@@ -34,7 +34,7 @@ namespace {
     const std::string connection_string("user=sruser dbname=sruser");
     const std::string query("select *, pg_sleep(0.5) from messages where 0 < key and key < 5;");
 
-    void print_result(const PGresult* result) {
+    inline constexpr auto print_result{[](const PGresult* result) noexcept {
         std::cout << "n=" << PQntuples(result) << ", m=" << PQnfields(result) << "\n";
         for (int i=0, n=PQntuples(result); i < n; ++i)  {
             for (int j=0, m=PQnfields(result); j < m; ++j == m || std::cout << ", ")  {
@@ -42,7 +42,7 @@ namespace {
             }
             std::cout << "\n";
         }
-    }
+    }};
 }
 
 namespace pg {
@@ -57,6 +57,9 @@ struct connection {
 
 struct error {
     std::string msg;
+    friend std::ostream& operator<< (std::ostream& out, const error& e) {
+        return out << e.msg;
+    }
 };
 
 struct env {
@@ -66,29 +69,29 @@ struct env {
 struct result {
     std::unique_ptr<PGresult, decltype([](auto r){ PQclear(r); })> res;
     result(PGresult* r): res(r) {}
-    operator PGresult*() const { return res.get(); }
+    operator PGresult*() const noexcept { return res.get(); }
 };
 
-auto exec(pg::connection& conn, const char* query) {
+auto exec2(pg::connection& conn, const char* query) {
     return
         ex::just()
         | ex::then([&conn, query] noexcept { PQsendQuery(conn, query); })
         | net::repeat_effect_until(
             net::async_poll(conn.socket, net::event_type::out)
-            | ex::upon_error([](auto&&){})
+            | ex::upon_error([](auto&&) noexcept {})
             | ex::then([](auto&&...) noexcept {}),
             [&conn] noexcept { return not PQflush(conn); }
           )
         | net::repeat_effect_until(
             net::async_poll(conn.socket, net::event_type::in)
-            | ex::upon_error([](auto&&){})
+            | ex::upon_error([](auto&&) noexcept {})
             | ex::then([&conn](auto&&...) noexcept { PQconsumeInput(conn); }),
             [&conn] noexcept { return !PQisBusy(conn); }
           )
         | ex::then([&conn] noexcept { return pg::result(PQgetResult(conn)); })
         ;
 }
-ex::task<pg::result, pg::env> exec1(pg::connection& conn, const char* query) {
+ex::task<pg::result, pg::env> exec(pg::connection& conn, const char* query) {
     PQsendQuery(conn, query);
     while (PQflush(conn)) {
         co_await net::async_poll(conn.socket, net::event_type::out);
@@ -135,7 +138,7 @@ auto main() -> int {
     spawn([]()->ex::task<void, io_env> {
         while (true) {
             std::cout << "time=" << std::chrono::system_clock::now() << "\n";
-            co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 100s);
+            co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 1s);
         }
     }());
     if (false) {
@@ -144,6 +147,18 @@ auto main() -> int {
         print_result(res);
         //scope.request_stop();
     }(conn, scope));
+    }
+    else {
+        spawn(
+            pg::exec2(conn, query.c_str())
+            //ex::just(pg::result(nullptr))
+            //| ex::then([](auto) noexcept {})
+            | ex::then(print_result)
+            //| ex::upon_error([](auto) noexcept {})
+            | ex::upon_error([](pg::error e) noexcept {
+                std::cout << "database error=" << e << "\n";
+            })
+            );
     }
 
     ex::sync_wait(ex::when_all(io.async_run(), scope.join()));
