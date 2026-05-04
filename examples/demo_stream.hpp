@@ -158,7 +158,7 @@ namespace demo::stream {
         }
         auto read(auto& to, const auto& sentinel)->ex::task<bool> {
             while (this->consume(to, sentinel)) {
-                if (std::distance(this->end, this->buffer.end()) < this->buffer.size() / 2) {
+                if (std::size_t(std::distance(this->end, this->buffer.end())) < this->buffer.size() / 2) {
                     this->end = std::move(this->it, this->end, this->buffer.begin());
                     this->it  = this->buffer.begin();
                 }

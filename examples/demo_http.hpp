@@ -12,12 +12,20 @@
 #include <array>
 #include <cstddef>
 #include <string_view>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
 namespace demo::http {
     namespace ex  = ::beman::execution;
     namespace net = ::beman::net;
+
+    struct request {
+        std::string              method;
+        std::string              url;
+        std::string              version;
+        std::vector<std::string> headers;
+    };
 
     template <typename Stream>
     struct http_client {
