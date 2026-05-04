@@ -22,8 +22,7 @@ struct connection {
 
     handle_t             handle;
     net::ip::tcp::socket socket;
-    connection(net::io_context& io, PGconn* conn)
-        : handle(conn), socket(io, io.make_socket(PQsocket(handle.get()))) {
+    connection(net::io_context& io, PGconn* conn) : handle(conn), socket(io, io.make_socket(PQsocket(handle.get()))) {
         if (PQstatus(conn) != CONNECTION_OK) {
             throw std::runtime_error(std::string("Connection to database failed: ") + PQerrorMessage(conn));
         }
@@ -44,9 +43,9 @@ struct error {
 };
 
 struct result {
-   std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })> res;
-   explicit result(PGresult* r): res(r) {}
-   operator PGresult*() const { return this->res.get(); }
+    std::unique_ptr<PGresult, decltype([](auto res) { PQclear(res); })> res;
+    explicit result(PGresult* r) : res(r) {}
+    operator PGresult*() const { return this->res.get(); }
 };
 
 // PQsetnonblocking(const PGconn *conn, int arg) - set non-blocking mode to avoid write blocks
@@ -127,37 +126,34 @@ int main() {
         pg::connection     conn(io, PQconnectdb("user=sruser dbname=sruser"));
         ex::counting_scope scope;
 
-        auto spawn{[&](ex::sender auto s) {
-            ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token());
-        }};
+        auto spawn{
+            [&](ex::sender auto s) { ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token()); }};
 
         struct noexcept_env {
-            using error_types = ex::completion_signatures<>;
+            using error_types    = ex::completion_signatures<>;
             using scheduler_type = decltype(io.get_scheduler());
         };
 
-        spawn(std::invoke(
-            []() noexcept -> ex::task<void, noexcept_env> {
-                while (true) {
-                    std::cout << "time=" << std::chrono::system_clock::now() << "\n" << std::flush;
-                    co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 1s);
-                }
-            }));
+        spawn(std::invoke([]() noexcept -> ex::task<void, noexcept_env> {
+            while (true) {
+                std::cout << "time=" << std::chrono::system_clock::now() << "\n" << std::flush;
+                co_await net::resume_after(co_await ex::read_env(ex::get_scheduler), 1s);
+            }
+        }));
 
         std::string query("select *, pg_sleep(1.1) from messages where 0 <= key and key < 3;");
 
         spawn(pg::exec(conn, query) | ex::then([](pg::result res) noexcept {
-                for (int i{}, n{PQntuples(res)}; i < n; ++i) {
-                    for (int j{}, m{PQnfields(res)}; j < m; ++j) {
-                        std::cout << PQgetvalue(res, i, j) << ',';
-                    }
-                    std::cout << '\n';
-                }
-                std::cout << "query done\n" << std::flush;
-            })
-            | ex::upon_error([](pg::error error) noexcept { std::cout << "query error: " << error << "\n"; })
-            | ex::then([&scope]() noexcept { scope.request_stop(); })
-        );
+                  for (int i{}, n{PQntuples(res)}; i < n; ++i) {
+                      for (int j{}, m{PQnfields(res)}; j < m; ++j) {
+                          std::cout << PQgetvalue(res, i, j) << ',';
+                      }
+                      std::cout << '\n';
+                  }
+                  std::cout << "query done\n" << std::flush;
+              }) |
+              ex::upon_error([](pg::error error) noexcept { std::cout << "query error: " << error << "\n"; }) |
+              ex::then([&scope]() noexcept { scope.request_stop(); }));
 
         ex::sync_wait(ex::when_all(scope.join(), io.async_run()) | ex::upon_stopped([]() noexcept {}));
     } catch (const pg::error& e) {

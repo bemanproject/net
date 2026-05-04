@@ -13,9 +13,7 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
-struct repeat_effect_until_t
-    : beman::execution::sender_adaptor_closure<repeat_effect_until_t>
-{
+struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_effect_until_t> {
     template <beman::execution::sender Upstream, beman::execution::sender Body, typename Predicate>
     auto operator()(Upstream&& upstream, Body&& body, Predicate&& predicate) const {
         return sender<std::remove_cvref_t<Upstream>, std::remove_cvref_t<Body>, std::remove_cvref_t<Predicate>>{
@@ -23,20 +21,15 @@ struct repeat_effect_until_t
     }
 
     template <beman::execution::sender Body, typename Predicate>
-    struct adaptor
-        : beman::execution::sender_adaptor_closure<adaptor<Body, Predicate>>
-    {
-        std::remove_cvref_t<Body> body;
+    struct adaptor : beman::execution::sender_adaptor_closure<adaptor<Body, Predicate>> {
+        std::remove_cvref_t<Body>      body;
         std::remove_cvref_t<Predicate> predicate;
         template <beman::execution::sender B, typename P>
-        adaptor(B&& b, P&& p): body(std::forward<B>(b)), predicate(std::forward<P>(p)) {}
+        adaptor(B&& b, P&& p) : body(std::forward<B>(b)), predicate(std::forward<P>(p)) {}
         template <beman::execution::sender Upstream>
         auto operator()(Upstream&& upstream) && {
             return repeat_effect_until_t{}(
-                std::forward<Upstream>(upstream),
-                std::move(this->body),
-                std::move(this->predicate)
-                );
+                std::forward<Upstream>(upstream), std::move(this->body), std::move(this->predicate));
         }
     };
     template <beman::execution::sender Body, typename Predicate>
@@ -98,23 +91,19 @@ struct repeat_effect_until_t
     template <beman::execution::sender Upstream, beman::execution::sender Body, typename Predicate>
     struct sender {
         using sender_concept = beman::execution::sender_t;
-        using completion_signatures =
-            beman::execution::completion_signatures<beman::execution::set_value_t()>;
+        using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
         template <typename, typename... Env>
         static consteval auto get_completion_signatures() {
             return net::detail::merge_completion_signatures<
-               completion_signatures,
-               ex::error_types_of_t<Body, ex::env<>, ex::completion_signatures>,
-               ex::error_types_of_t<Upstream, ex::env<>, ex::completion_signatures>,
-               std::conditional_t<ex::sends_stopped<Body> || ex::sends_stopped<Upstream>,
-                   ex::completion_signatures<ex::set_stopped_t()>,
-                   ex::completion_signatures<>
-                   >,
+                completion_signatures,
+                ex::error_types_of_t<Body, ex::env<>, ex::completion_signatures>,
+                ex::error_types_of_t<Upstream, ex::env<>, ex::completion_signatures>,
+                std::conditional_t<ex::sends_stopped<Body> || ex::sends_stopped<Upstream>,
+                                   ex::completion_signatures<ex::set_stopped_t()>,
+                                   ex::completion_signatures<>>,
                 std::conditional_t<noexcept(std::declval<Predicate>()()),
-                   ex::completion_signatures<>,
-                   ex::completion_signatures<ex::set_error_t(std::exception_ptr)>
-                   >
-            >();
+                                   ex::completion_signatures<>,
+                                   ex::completion_signatures<ex::set_error_t(std::exception_ptr)>>>();
         }
 
         Upstream  upstream;
@@ -122,7 +111,8 @@ struct repeat_effect_until_t
         Predicate predicate;
 
         template <beman::execution::receiver Receiver>
-        auto connect(Receiver&& receiver) noexcept(std::is_nothrow_constructible_v<std::remove_cvref_t<Receiver>, Receiver>) {
+        auto connect(Receiver&& receiver) noexcept(
+            std::is_nothrow_constructible_v<std::remove_cvref_t<Receiver>, Receiver>) {
             return state<Upstream, Body, Predicate, std::remove_cvref_t<Receiver>>{std::move(this->upstream),
                                                                                    std::move(this->body),
                                                                                    std::move(this->predicate),

@@ -242,30 +242,22 @@ inline auto demo::into_expected_t::operator()(Sender&& s) const {
 
 template <typename Env>
 struct demo::when_any_t::state_env_base {
-    virtual auto get_receiver_env() const noexcept -> Env = 0;
+    virtual auto                    get_receiver_env() const noexcept -> Env = 0;
     ::demo::ex::inplace_stop_source source{};
 };
 
 // ----------------------------------------------------------------------------
 
 template <typename Receiver>
-struct demo::when_any_t::state_base
-    : demo::when_any_t::state_env_base<ex::env_of_t<Receiver>>
-{
+struct demo::when_any_t::state_base : demo::when_any_t::state_env_base<ex::env_of_t<Receiver>> {
     ::std::size_t                   total;
     Receiver                        receiver;
     ::std::atomic<::std::size_t>    done_count{};
     ::std::atomic<::std::size_t>    ready_count{};
 
-    auto get_receiver_env() const noexcept -> ex::env_of_t<Receiver> override {
-        return ex::get_env(this->receiver);
-    }
+    auto get_receiver_env() const noexcept -> ex::env_of_t<Receiver> override { return ex::get_env(this->receiver); }
     template <typename R>
-    state_base(::std::size_t tot, R&& r)
-        : total(tot)
-        , receiver(std::forward<R>(r))
-    {
-    }
+    state_base(::std::size_t tot, R&& r) : total(tot), receiver(std::forward<R>(r)) {}
     virtual ~state_base() = default;
     auto complete() -> bool {
         if (0u == this->done_count++) {
@@ -318,9 +310,7 @@ struct demo::when_any_t::env {
         return this->state->source.get_token();
     }
     template <typename Query>
-        requires requires(const Query& q, const Env& e) {
-            q(e);
-        }
+        requires requires(const Query& q, const Env& e) { q(e); }
     auto query(const Query& q) const noexcept {
         return q(this->state->get_receiver_env());
     }
@@ -333,9 +323,7 @@ struct demo::when_any_t::receiver {
     using receiver_concept = ::demo::ex::receiver_t;
     demo::when_any_t::state_value<Receiver, Value, Error>* state;
 
-    auto get_env() const noexcept -> demo::when_any_t::env<ex::env_of_t<Receiver>> {
-        return {this->state};
-    }
+    auto get_env() const noexcept -> demo::when_any_t::env<ex::env_of_t<Receiver>> { return {this->state}; }
     template <typename E>
     auto set_error(E&& error) && noexcept -> void {
         if (this->state->complete()) {
@@ -376,8 +364,7 @@ struct demo::when_any_t::state<::std::index_sequence<I...>, Receiver, Value, Err
     state(R&& rcvr, P&& s)
         : state_value<Receiver, value_type, error_type>(sizeof...(Sender), ::std::forward<R>(rcvr)),
           states{demo::ex::connect(::beman::net::detail::ex::detail::forward_like<P>(s.template get<I>()),
-                                   receiver_type<I>{this})...} {
-    }
+                                   receiver_type<I>{this})...} {}
     state(state&&) = delete;
     auto start() & noexcept -> void { (demo::ex::start(this->states.template get<I>()), ...); }
 };
@@ -390,25 +377,23 @@ struct demo::when_any_t::sender {
     using sender_concept = ex::sender_t;
     template <typename, typename Env>
     static consteval auto get_completion_signatures() {
-        return ::beman::execution::detail::meta::unique<
-            ::beman::execution::detail::meta::combine<decltype(ex::get_completion_signatures<Sender, when_any_t::env<Env>>())...>>();
+        return ::beman::execution::detail::meta::unique<::beman::execution::detail::meta::combine<
+            decltype(ex::get_completion_signatures<Sender, when_any_t::env<Env>>())...>>();
     }
 
     template <demo::ex::receiver Receiver>
     auto connect(Receiver&& receiver) && {
-        using completion_signatures = decltype(ex::get_completion_signatures<std::remove_cvref_t<decltype(*this)>, decltype(ex::get_env(receiver))>());
+        using completion_signatures = decltype(ex::get_completion_signatures<std::remove_cvref_t<decltype(*this)>,
+                                                                             decltype(ex::get_env(receiver))>());
         return state<
-        ::std::index_sequence_for<Sender...>,
-        ::std::remove_cvref_t<Receiver>,
-        demo::detail::variant_from_list_t<ex::detail::transform<
-            demo::detail::decayed_set_value_t,
-            demo::detail::make_type_list_t<ex::detail::filter<
-                demo::detail::is_set_value,
-                completion_signatures>>>>,
-        demo::detail::variant_from_list_t<ex::detail::filter<
-            demo::detail::is_set_error,
-            completion_signatures>>,
-        Sender...> {::std::forward<Receiver>(receiver), ::std::move(this->sender)};
+            ::std::index_sequence_for<Sender...>,
+            ::std::remove_cvref_t<Receiver>,
+            demo::detail::variant_from_list_t<
+                ex::detail::transform<demo::detail::decayed_set_value_t,
+                                      demo::detail::make_type_list_t<
+                                          ex::detail::filter<demo::detail::is_set_value, completion_signatures>>>>,
+            demo::detail::variant_from_list_t<ex::detail::filter<demo::detail::is_set_error, completion_signatures>>,
+            Sender...>{::std::forward<Receiver>(receiver), ::std::move(this->sender)};
     }
 };
 

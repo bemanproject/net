@@ -21,8 +21,9 @@ namespace net = ::beman::net;
 int main() {
     std::cout << std::unitbuf;
     demo::context context;
-    std::string   request("GET /some/url HTTP/1.1\r\nHost: localhost:12345\r\nUser-Agent: memory/0.0\r\nAccept: */*\r\n\r\n");
-    context.add("foo", [data=std::string_view(request)](demo::memory_base& s) mutable {
+    std::string   request(
+        "GET /some/url HTTP/1.1\r\nHost: localhost:12345\r\nUser-Agent: memory/0.0\r\nAccept: */*\r\n\r\n");
+    context.add("foo", [data = std::string_view(request)](demo::memory_base& s) mutable {
         if (std::size_t n{s.add_receive_data(data.substr(0, std::min(std::size_t(2), data.size())))}) {
             data = data.substr(n);
             return false;
@@ -30,9 +31,9 @@ int main() {
         return true;
     });
 
-    auto reader{[](auto client)->ex::task<> {
+    auto reader{[](auto client) -> ex::task<> {
         co_await client.request();
     }(demo::http_client(demo::mem_stream(context, "foo")))};
 
-   ex::sync_wait(ex::when_all(context.async_run(), std::move(reader)));
+    ex::sync_wait(ex::when_all(context.async_run(), std::move(reader)));
 }

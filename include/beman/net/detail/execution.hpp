@@ -27,8 +27,8 @@ using ::beman::execution::detail::decayed_tuple;
 using ::beman::execution::env;
 using ::beman::execution::env_of_t;
 using ::beman::execution::error_types_of_t;
-using ::beman::execution::sends_stopped;
 using ::beman::execution::get_env;
+using ::beman::execution::sends_stopped;
 using ::beman::execution::value_types_of_t;
 
 using ::beman::execution::get_completion_scheduler;
@@ -65,6 +65,7 @@ using ::beman::execution::connect_t;
 using ::beman::execution::start;
 using ::beman::execution::start_t;
 
+using ::beman::execution::inline_scheduler;
 using ::beman::execution::just;
 using ::beman::execution::just_error;
 using ::beman::execution::just_stopped;
@@ -74,7 +75,6 @@ using ::beman::execution::then;
 using ::beman::execution::upon_error;
 using ::beman::execution::upon_stopped;
 using ::beman::execution::write_env;
-using ::beman::execution::inline_scheduler;
 } // namespace beman::net::detail::ex
 
 // ----------------------------------------------------------------------------
