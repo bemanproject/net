@@ -37,12 +37,13 @@ set(EXAMPLES
 if(${HAS_POSTGRES})
 list(APPEND EXAMPLES
     postgres
+    postgres-talk
     populate-postgres
 )
 endif()
 set(xEXAMPLES taps)
-set(EXAMPLES memory-stream)
-set(EXAMPLES postgres-talk)
+set(xEXAMPLES memory-stream)
+set(xEXAMPLES postgres-talk)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
