@@ -28,7 +28,7 @@ class scope {
     };
 
     struct receiver {
-        using receiver_concept = ex::receiver_t;
+        using receiver_concept = ex::receiver_tag;
         scope*    self;
         job_base* state{};
 

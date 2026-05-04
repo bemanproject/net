@@ -105,7 +105,7 @@ struct task {
             auto            query(ex::get_stop_token_t) const noexcept -> ex::inplace_stop_token;
         };
         struct receiver {
-            using receiver_concept = ex::receiver_t;
+            using receiver_concept = ex::receiver_tag;
 
             sender_awaiter* awaiter{};
 
@@ -176,7 +176,7 @@ struct task {
 
     template <typename Receiver>
     struct state : task_state_base<::std::decay_t<Result>> {
-        using operation_state_concept = ex::operation_state_t;
+        using operation_state_concept = ex::operation_state_tag;
         struct callback_t {
             state* object;
             auto   operator()() const {
@@ -219,7 +219,7 @@ struct task {
 
     unique_handle handle;
 
-    using sender_concept = ::beman::net::detail::ex::sender_t;
+    using sender_concept = ::beman::net::detail::ex::sender_tag;
     using completion_signatures =
         ::beman::net::detail::ex::completion_signatures<::beman::net::detail::ex::set_error_t(::std::exception_ptr),
                                                         ::beman::net::detail::ex::set_stopped_t(),

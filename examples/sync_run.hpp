@@ -10,7 +10,7 @@ struct sync_run_env {
 };
 struct sync_run_receiver {
     ex::run_loop& loop;
-    using receiver_concept = ex::receiver_t;
+    using receiver_concept = ex::receiver_tag;
 
     auto get_env() const noexcept { return sync_run_env{this->loop}; }
     auto set_value() noexcept { this->loop.finish(); }

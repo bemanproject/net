@@ -70,7 +70,7 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
     template <beman::execution::sender Sender, beman::execution::receiver Receiver>
     struct state {
         struct receiver {
-            using receiver_concept = beman::execution::receiver_t;
+            using receiver_concept = beman::execution::receiver_tag;
             using env_t            = beman::execution::env_of_t<Receiver>;
             Receiver* _receiver;
             auto      get_env() const noexcept { return beman::execution::get_env(*this->_receiver); }
@@ -88,7 +88,7 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
             }
             auto set_stopped() && noexcept { beman::execution::set_stopped(std::move(*this->_receiver)); }
         };
-        using operation_state_concept = beman::execution::operation_state_t;
+        using operation_state_concept = beman::execution::operation_state_tag;
         using inner_state_t           = beman::execution::connect_result_t<Sender, receiver>;
 
         Receiver      _receiver;
@@ -102,7 +102,7 @@ struct into_expected_t : beman::execution::sender_adaptor_closure<into_expected_
     };
     template <beman::execution::sender Sender>
     struct sender {
-        using sender_concept = beman::execution::sender_t;
+        using sender_concept = beman::execution::sender_tag;
 
         Sender _sender;
 

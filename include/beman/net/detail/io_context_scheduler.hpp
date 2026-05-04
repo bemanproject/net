@@ -23,7 +23,7 @@ class beman::net::detail::io_context_scheduler {
     ::beman::net::detail::context_base* d_context;
 
   public:
-    using scheduler_concept = ::beman::net::detail::ex::scheduler_t;
+    using scheduler_concept = ::beman::net::detail::ex::scheduler_tag;
 
     struct env {
         ::beman::net::detail::context_base* d_context;
@@ -35,7 +35,7 @@ class beman::net::detail::io_context_scheduler {
         }
     };
     struct sender {
-        using sender_concept        = ::beman::execution::sender_t;
+        using sender_concept        = ::beman::execution::sender_tag;
         using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
         template <typename... Env>
         static consteval auto get_completion_signatures() -> completion_signatures {
@@ -44,7 +44,7 @@ class beman::net::detail::io_context_scheduler {
 
         template <typename Receiver>
         struct state : ::beman::net::detail::context_base::task {
-            using operation_state_concept = ::beman::net::detail::ex::operation_state_t;
+            using operation_state_concept = ::beman::net::detail::ex::operation_state_tag;
 
             ::std::remove_cvref_t<Receiver>     d_receiver;
             ::beman::net::detail::context_base* d_context;

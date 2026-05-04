@@ -42,7 +42,7 @@ struct beman::net::detail::sender_state_base {
 
 template <::beman::net::detail::ex::receiver Receiver>
 struct beman::net::detail::sender_upstream_receiver {
-    using receiver_concept = ::beman::net::detail::ex::receiver_t;
+    using receiver_concept = ::beman::net::detail::ex::receiver_tag;
     ::beman::net::detail::sender_state_base<Receiver>* d_state;
 
     auto set_value() && noexcept -> void { this->d_state->start(); }
@@ -61,7 +61,7 @@ template <typename Desc,
           ::beman::net::detail::ex::receiver Receiver,
           ::beman::net::detail::ex::sender   UpstreamSender>
 struct beman::net::detail::sender_state : Desc::operation, ::beman::net::detail::sender_state_base<Receiver> {
-    using operation_state_concept = ::beman::net::detail::ex::operation_state_t;
+    using operation_state_concept = ::beman::net::detail::ex::operation_state_tag;
 
     struct cancel_callback : ::beman::net::detail::io_base {
         sender_state* d_state;
@@ -133,7 +133,7 @@ struct beman::net::detail::sender_state : Desc::operation, ::beman::net::detail:
 
 template <typename Desc, typename Data, ::beman::net::detail::ex::sender Upstream>
 struct beman::net::detail::sender {
-    using sender_concept = ::beman::net::detail::ex::sender_t;
+    using sender_concept = ::beman::net::detail::ex::sender_tag;
     using completion_signatures =
         ::beman::net::detail::ex::completion_signatures<typename Data::completion_signature,
                                                         ::beman::net::detail::ex::set_error_t(::std::error_code),

@@ -100,7 +100,7 @@ class beman::net::io_context {
 
     template <beman::execution::receiver Receiver>
     struct run_one_state {
-        using operation_state_concept = ::beman::execution::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_tag;
 
         beman::net::io_context*         _context;
         ::std::remove_cvref_t<Receiver> _receiver;
@@ -114,7 +114,7 @@ class beman::net::io_context {
     };
 
     struct run_one_sender {
-        using sender_concept = ::beman::execution::sender_t;
+        using sender_concept = ::beman::execution::sender_tag;
         using completion_signatures =
             ::beman::execution::completion_signatures<::beman::execution::set_value_t(std::size_t),
                                                       ::beman::execution::set_stopped_t()>;
