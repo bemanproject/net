@@ -39,7 +39,7 @@ if(${HAS_POSTGRES})
 endif()
 set(xEXAMPLES taps)
 set(xEXAMPLES memory-stream)
-set(xEXAMPLES postgres-talk)
+set(EXAMPLES postgres-talk)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
