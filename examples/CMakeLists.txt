@@ -37,6 +37,7 @@ set(EXAMPLES
 if(${HAS_POSTGRES})
     list(APPEND EXAMPLES postgres postgres-talk populate-postgres)
 endif()
+set(EXAMPLES postgres-talk)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
