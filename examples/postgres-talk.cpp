@@ -49,150 +49,144 @@ inline constexpr auto print_result [[maybe_unused]]{[](const PGresult* result) n
 } // namespace
 
 namespace pg {
-    struct conn {
-        std::unique_ptr<PGconn, decltype([](auto c){ PQfinish(c); })> con;
-        net::ip::tcp::socket socket;
-        conn(net::io_context& io, PGconn* c): con(c), socket(io, io.make_socket(PQsocket(con.get()))) {}
-        operator PGconn*() const { return con.get(); }
-    };
+struct conn {
+    std::unique_ptr<PGconn, decltype([](auto c) { PQfinish(c); })> con;
+    net::ip::tcp::socket                                           socket;
+    conn(net::io_context& io, PGconn* c) : con(c), socket(io, io.make_socket(PQsocket(con.get()))) {}
+    operator PGconn*() const { return con.get(); }
+};
 
-    struct result {
-        std::unique_ptr<PGresult, decltype([](auto r){ PQclear(r); })> res;
-        result(PGresult* r): res(r) {}
-        operator PGresult*() const { return res.get(); }
-    };
-    using results = std::vector<pg::result>;
-    ex::task<results> exec(auto& conn, std::string query) {
-        if (!PQsendQuery(conn, query.c_str())) {
-            std::cout << "ERROR: " << PQerrorMessage(conn) << "\n";
-            throw std::runtime_error("ERROR");
-        }
-        while (PQflush(conn)) {
-            co_await net::async_poll(conn.socket, net::event_type::out);
-        }
-        pg::results res;
-        std::cout << "sent query\n";
-
-        while (true) { 
-            while (PQisBusy(conn)) {
-                co_await ex::unstoppable(net::async_poll(conn.socket, net::event_type::in));
-                if (!PQconsumeInput(conn)) {
-                    // error handling
-                }
-            }
-            std::cout << "got a result\n";
-            if (!res.emplace_back(PQgetResult(conn))) {
-                res.pop_back();
-                break;
-            }
-        }
-        co_return res;
+struct result {
+    std::unique_ptr<PGresult, decltype([](auto r) { PQclear(r); })> res;
+    result(PGresult* r) : res(r) {}
+    operator PGresult*() const { return res.get(); }
+};
+using results = std::vector<pg::result>;
+ex::task<results> exec(auto& conn, std::string query) {
+    if (!PQsendQuery(conn, query.c_str())) {
+        std::cout << "ERROR: " << PQerrorMessage(conn) << "\n";
+        throw std::runtime_error("ERROR");
     }
+    while (PQflush(conn)) {
+        co_await net::async_poll(conn.socket, net::event_type::out);
+    }
+    pg::results res;
+    std::cout << "sent query\n";
 
-    template <typename Object>
-    struct mutex {
-        struct state_base {
-            state_base* next{};
-            virtual void run() = 0;
-        };
-
-        Object obj;
-        bool   is_busy{false};
-        state_base* waiting{};
-
-        template <typename... A>
-        mutex(A&&... a): obj(std::forward<A>(a)...) {}
-
-        template <typename Fun>
-        using sender_t = decltype(std::declval<Fun>()(std::declval<Object&>()));
-
-        template <typename Rcvr, typename Fun>
-        struct state: state_base {
-            using operation_state_concept = ex::operation_state_tag;
-            std::remove_cvref_t<Rcvr> rcvr;
-            mutex* mut;
-
-            struct receiver {
-                using receiver_concept = ex::receiver_tag;
-                state* s;
-                auto get_env() const noexcept {
-                    return ex::get_env(s->rcvr);
-                }
-                template <typename... A>
-                void set_value(A&&... a) noexcept {
-                    s->complete();
-                    ex::set_value(std::move(s->rcvr), std::forward<A>(a)...);
-                }
-                template <typename A>
-                void set_error(A&& a) noexcept {
-                    s->complete();
-                    ex::set_error(std::move(s->rcvr), std::forward<A>(a));
-                }
-                void set_stopped() noexcept {
-                    s->complete();
-                    ex::set_stopped(std::move(s->rcvr));
-                }
-            };
-
-            using inner_state_t = ex::connect_result_t<sender_t<Fun>, receiver>;
-
-            inner_state_t inner_state;
-            state(Rcvr&& r, Fun f, mutex* m): rcvr(std::forward<Rcvr>(r)), mut(m),
-               inner_state(ex::connect(std::move(f)(mut->obj), receiver{this}))  {}
-            void start() noexcept {
-                if (!std::exchange(this->mut->is_busy, true)) {
-                    run();
-                }
-                else {
-                    this->next = std::exchange(mut->waiting, this);
-                }
+    while (true) {
+        while (PQisBusy(conn)) {
+            co_await ex::unstoppable(net::async_poll(conn.socket, net::event_type::in));
+            if (!PQconsumeInput(conn)) {
+                // error handling
             }
-            void complete() {
-                if (mut->waiting) {
-                    std::exchange(mut->waiting, mut->waiting->next)->run();
-                }
-                else {
-                   mut->is_busy = false;
-                }
+        }
+        std::cout << "got a result\n";
+        if (!res.emplace_back(PQgetResult(conn))) {
+            res.pop_back();
+            break;
+        }
+    }
+    co_return res;
+}
+
+template <typename Object>
+struct mutex {
+    struct state_base {
+        state_base*  next{};
+        virtual void run() = 0;
+    };
+
+    Object      obj;
+    bool        is_busy{false};
+    state_base* waiting{};
+
+    template <typename... A>
+    mutex(A&&... a) : obj(std::forward<A>(a)...) {}
+
+    template <typename Fun>
+    using sender_t = decltype(std::declval<Fun>()(std::declval<Object&>()));
+
+    template <typename Rcvr, typename Fun>
+    struct state : state_base {
+        using operation_state_concept = ex::operation_state_tag;
+        std::remove_cvref_t<Rcvr> rcvr;
+        mutex*                    mut;
+
+        struct receiver {
+            using receiver_concept = ex::receiver_tag;
+            state* s;
+            auto   get_env() const noexcept { return ex::get_env(s->rcvr); }
+            template <typename... A>
+            void set_value(A&&... a) noexcept {
+                s->complete();
+                ex::set_value(std::move(s->rcvr), std::forward<A>(a)...);
             }
-            void run() {
-                ex::start(inner_state);
+            template <typename A>
+            void set_error(A&& a) noexcept {
+                s->complete();
+                ex::set_error(std::move(s->rcvr), std::forward<A>(a));
+            }
+            void set_stopped() noexcept {
+                s->complete();
+                ex::set_stopped(std::move(s->rcvr));
             }
         };
 
-        template <typename Fun>
-        struct sender {
-            using sender_concept = ex::sender_tag;
-            template <typename, typename... Env>
-            static consteval auto get_completion_signatures() {
-                return ex::get_completion_signatures<sender_t<Fun>, Env...>();
+        using inner_state_t = ex::connect_result_t<sender_t<Fun>, receiver>;
+
+        inner_state_t inner_state;
+        state(Rcvr&& r, Fun f, mutex* m)
+            : rcvr(std::forward<Rcvr>(r)), mut(m), inner_state(ex::connect(std::move(f)(mut->obj), receiver{this})) {}
+        void start() noexcept {
+            if (!std::exchange(this->mut->is_busy, true)) {
+                run();
+            } else {
+                this->next = std::exchange(mut->waiting, this);
             }
-
-            Fun fun;
-            mutex* mut;
-
-            template <ex::receiver Rcvr>
-            auto connect(Rcvr&& r) && {
-                return state<Rcvr, Fun>(std::forward<Rcvr>(r), std::move(fun), mut);
+        }
+        void complete() {
+            if (mut->waiting) {
+                std::exchange(mut->waiting, mut->waiting->next)->run();
+            } else {
+                mut->is_busy = false;
             }
-        };
+        }
+        void run() { ex::start(inner_state); }
+    };
 
-        template <typename Fun>
-        auto run(Fun fun) {
-            return sender<Fun>(std::move(fun), this);
+    template <typename Fun>
+    struct sender {
+        using sender_concept = ex::sender_tag;
+        template <typename, typename... Env>
+        static consteval auto get_completion_signatures() {
+            return ex::get_completion_signatures<sender_t<Fun>, Env...>();
+        }
+
+        Fun    fun;
+        mutex* mut;
+
+        template <ex::receiver Rcvr>
+        auto connect(Rcvr&& r) && {
+            return state<Rcvr, Fun>(std::forward<Rcvr>(r), std::move(fun), mut);
         }
     };
 
-    auto exec(pg::mutex<pg::conn>& conn, std::string query) {
-        return conn.run([=](pg::conn& obj) { return exec(obj, query); });
+    template <typename Fun>
+    auto run(Fun fun) {
+        return sender<Fun>(std::move(fun), this);
     }
+};
+
+auto exec(pg::mutex<pg::conn>& conn, std::string query) {
+    return conn.run([=](pg::conn& obj) { return exec(obj, query); });
+}
 } // namespace pg
 
 // ----------------------------------------------------------------------------
 
 auto main() -> int {
     std::cout << std::unitbuf << "Postgres Example\n";
-    net::io_context io;
+    net::io_context     io;
     pg::mutex<pg::conn> conn(io, PQconnectdb(connection_string.c_str()));
 
     auto clock = [](auto sched) -> ex::task<> {
@@ -205,17 +199,16 @@ auto main() -> int {
     }(io.get_scheduler());
     std::cout << "do more!\n";
 
-    auto query = [](auto& conn)->ex::task<> {
+    auto query = [](auto& conn) -> ex::task<> {
         auto res = co_await pg::exec(conn, ::query);
         std::ranges::for_each(res, ::print_result);
         co_return;
     }(conn);
-    auto query2 = [](auto& conn)->ex::task<> {
+    auto query2 = [](auto& conn) -> ex::task<> {
         auto res = co_await pg::exec(conn, ::query2);
         std::ranges::for_each(res, ::print_result);
         co_return;
     }(conn);
 
-    ex::sync_wait(demo::when_any(io.async_run(), std::move(clock),
-        ex::when_all(std::move(query), std::move(query2))));
+    ex::sync_wait(demo::when_any(io.async_run(), std::move(clock), ex::when_all(std::move(query), std::move(query2))));
 }

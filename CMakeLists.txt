@@ -52,7 +52,6 @@ beman_install_library(${PROJECT_NAME} TARGETS beman.net_headers
 
 enable_testing()
 
-set(BEMAN_NET_BUILD_TESTS FALSE)
 if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
 endif()

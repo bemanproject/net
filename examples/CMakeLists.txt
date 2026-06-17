@@ -35,9 +35,14 @@ set(EXAMPLES
 )
 
 if(${HAS_POSTGRES})
-    list(APPEND EXAMPLES postgres postgres-talk populate-postgres)
+    list(APPEND EXAMPLES
+        postgres
+        postgres-talk
+        postgres-talk-accuonsea
+        postgres-talk-c++now
+        populate-postgres
+    )
 endif()
-set(EXAMPLES postgres-talk)
 
 foreach(EXAMPLE ${EXAMPLES})
     set(EXAMPLE_TARGET beman.net.examples.${EXAMPLE})
