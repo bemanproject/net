@@ -41,10 +41,14 @@ set(POSTGRESROOT /Library/PostgreSQL/18)
 check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
 
 add_subdirectory(src/beman/net)
+add_subdirectory(src/beman/sequence)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
 include(infra/cmake/beman-install-library.cmake)
+beman_install_library(beman.sequence TARGETS beman.sequence_headers
+    DEPENDENCIES [===[beman.task 0.2.0 EXACT]===]
+)
 beman_install_library(${PROJECT_NAME} TARGETS beman.net_headers
     DEPENDENCIES [===[beman.task 0.2.0 EXACT]===]
 )
@@ -54,6 +58,7 @@ enable_testing()
 
 if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
+    add_subdirectory(tests/beman/sequence)
 endif()
 
 if(${BEMAN_NET_BUILD_EXAMPLES})
