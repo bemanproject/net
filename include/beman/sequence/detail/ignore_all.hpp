@@ -18,7 +18,7 @@ namespace beman::sequence::detail {
                 using receiver_concept = ::beman::execution::receiver_tag;
                 state* st;
 
-                void set_value() && noexcept {
+                void set_value(auto&&...) && noexcept {
                     ::beman::execution::set_value(::std::move(this->st->rcvr));
                 }
                 template <::beman::execution::sender Snd>

@@ -20,6 +20,7 @@ target_sources(
             TYPE HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
+                ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/connector.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/ignore_all.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/iota.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/sequence_sender.hpp

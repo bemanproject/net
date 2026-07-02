@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_SEQUENCE_DETAIL_IOTA
 
 #include <beman/sequence/detail/sequence_sender.hpp>
+#include <beman/sequence/detail/connector.hpp>
 #include <beman/sequence/detail/set_next.hpp>
 #include <type_traits>
 #include <utility>
@@ -16,14 +17,32 @@ namespace beman::sequence::detail {
         template <::beman::execution::receiver Rcvr, typename T>
         struct state {
             using operation_state_concept = ::beman::execution::operation_state_tag;
-            ::std::remove_cvref_t<Rcvr> rcvr;
+            using rcvr_t = ::std::remove_cvref_t<Rcvr>;
+            using sndr_t = decltype(::beman::sequence::set_next(std::declval<rcvr_t&>(), ::beman::execution::just(std::declval<T>())));
+
+            rcvr_t rcvr;
+            struct receiver {
+                using receiver_concept = ::beman::execution::receiver_tag;
+                state* st;
+                auto get_env() const noexcept { return ::beman::execution::get_env(this->st->rcvr); }
+                auto set_value() && noexcept { this->st->start_next(); }
+            };
             T first;
             T last;
 
+            std::optional<::beman::sequence::detail::connector<sndr_t, receiver>> inner_state;
+
             void start() & noexcept {
+                this->start_next();
+            }
+            void start_next() noexcept {
                 if (first != last) {
-                    //::beman::sequence::set_next(this->rcvr, this->first);
-                    ++this->first;
+                    ::beman::execution::start(
+                        this->inner_state.emplace(
+                            ::beman::sequence::set_next(this->rcvr, ::beman::execution::just(this->first++)),
+                            receiver{this}
+                        )
+                    );
                 } else {
                     ::beman::execution::set_value(::std::move(this->rcvr));
                 }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/ignore_all.hpp>
+#include <beman/sequence/detail/connector.hpp>
 #include <beman/sequence/detail/set_next.hpp>
 #include <beman/sequence/detail/sequence_sender.hpp>
 #include <beman/execution/execution.hpp>
@@ -17,14 +18,6 @@ namespace sq = beman::sequence;
 // ----------------------------------------------------------------------------
 
 namespace {
-    template <::beman::execution::sender Sndr, ::beman::execution::receiver Rcvr>
-    struct connector {
-        using state_t = ::beman::execution::connect_result_t<Sndr, Rcvr>;
-        state_t st;
-        connector(Sndr&& sndr, Rcvr&& rcvr) noexcept
-            : st(::beman::execution::connect(::std::forward<Sndr>(sndr), ::std::forward<Rcvr>(rcvr))) {}
-    };
-
     template <::beman::execution::receiver Rcvr>
     struct state {
         using operation_state_concept = ::beman::execution::operation_state_tag;
@@ -48,7 +41,7 @@ namespace {
         };
         using sndr_t = decltype(::beman::sequence::set_next(::std::declval<receiver&>(), ::beman::execution::just()));
 
-        ::std::optional<connector<sndr_t, receiver>> inner_state;
+        ::std::optional<sq::detail::connector<sndr_t, receiver>> inner_state;
 
         void start() & noexcept {
             this->started = true;
