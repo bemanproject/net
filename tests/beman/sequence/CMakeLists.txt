@@ -7,6 +7,9 @@ list(APPEND tests
     connector.pass
     ignore_all.pass
     iota.pass
+    sequence_connect.pass
+    sequence_connect_result_t.pass
+    sequence_receiver.pass
     sequence_sender.pass
     set_next.pass
 )

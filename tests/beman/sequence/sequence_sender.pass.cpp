@@ -12,19 +12,17 @@ namespace sq = beman::sequence;
 // ----------------------------------------------------------------------------
 
 namespace {
-    struct sender {
-        using sender_concept = ex::sender_tag;
-    };
-    static_assert(ex::sender<sender>);
-    static_assert(not sq::sequence_sender<sender>);
+struct sender {
+    using sender_concept = ex::sender_tag;
+};
+static_assert(ex::sender<sender>);
+static_assert(not sq::sequence_sender<sender>);
 
-    struct sequence_sender {
-        using sender_concept = sq::sequence_sender_tag;
-    };
-    static_assert(ex::sender<sequence_sender>);
-    static_assert(sq::sequence_sender<sequence_sender>);
-}
+struct sequence_sender {
+    using sender_concept = sq::sequence_sender_tag;
+};
+static_assert(ex::sender<sequence_sender>);
+static_assert(sq::sequence_sender<sequence_sender>);
+} // namespace
 
-int main() {
-    static_assert(std::derived_from<sq::sequence_sender_tag, ex::sender_tag>);
-}
+int main() { static_assert(std::derived_from<sq::sequence_sender_tag, ex::sender_tag>); }

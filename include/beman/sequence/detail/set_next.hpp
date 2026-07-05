@@ -9,18 +9,18 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::sequence::detail {
-    struct set_next_t {
-        template <::beman::execution::receiver Rcvr, ::beman::execution::sender Sndr>
-        auto operator()(Rcvr& rcvr, Sndr&& sndr) const noexcept {
-            return rcvr.set_next(std::forward<Sndr>(sndr));
-        }
-    };
-}
+struct set_next_t {
+    template <::beman::execution::receiver Rcvr, ::beman::execution::sender Sndr>
+    auto operator()(Rcvr& rcvr, Sndr&& sndr) const noexcept {
+        return rcvr.set_next(std::forward<Sndr>(sndr));
+    }
+};
+} // namespace beman::sequence::detail
 
 namespace beman::sequence {
-    using beman::sequence::detail::set_next_t;
-    inline constexpr beman::sequence::set_next_t set_next{};
-}
+using beman::sequence::detail::set_next_t;
+inline constexpr beman::sequence::set_next_t set_next{};
+} // namespace beman::sequence
 
 // ----------------------------------------------------------------------------
 

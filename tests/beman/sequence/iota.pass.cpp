@@ -12,45 +12,43 @@ namespace sq = beman::sequence;
 // ----------------------------------------------------------------------------
 
 namespace {
-    template <ex::sender Sndr>
-    struct test_sender {
-        using sender_concept = sq::sequence_sender_tag;
-        template <typename, typename... E>
-        static consteval auto get_completion_signatures() {
-            return ex::get_completion_signatures<Sndr, E...>();
+template <ex::sender Sndr>
+struct test_sender {
+    using sender_concept = sq::sequence_sender_tag;
+    template <typename, typename... E>
+    static consteval auto get_completion_signatures() {
+        return ex::get_completion_signatures<Sndr, E...>();
+    }
+
+    template <sq::sequence_receiver Rcvr>
+    struct receiver {
+        using receiver_concept = sq::sequence_receiver_tag;
+        std::remove_cvref_t<Rcvr> rcvr;
+        int&                      sum;
+        template <typename... A>
+        void set_value(A&&... a) && noexcept {
+            ex::set_value(std::move(this->rcvr), std::forward<A>(a)...);
         }
-
-        template <ex::receiver Rcvr>
-        struct receiver {
-            using receiver_concept = ex::receiver_tag;
-            std::remove_cvref_t<Rcvr> rcvr;
-            int& sum;
-            template <typename... A>
-            void set_value(A&&... a) && noexcept  {
-                ex::set_value(std::move(this->rcvr), std::forward<A>(a)...);
-            }
-            template <ex::sender Snd>
-            auto set_next(Snd&& snd) noexcept {
-                return std::forward<Snd>(snd) | ex::then([this](int v) noexcept {
-                    this->sum += v;
-                });
-            }
-        };
-
-        std::remove_cvref_t<Sndr> sndr;
-        int& sum;
-        template <ex::receiver Rcvr>
-        auto connect(Rcvr&& rcvr) && {
-            return ex::connect(std::move(sndr), receiver<Rcvr>(std::forward<Rcvr>(rcvr), this->sum));
+        template <ex::sender Snd>
+        auto set_next(Snd&& snd) noexcept {
+            return std::forward<Snd>(snd) | ex::then([this](int v) noexcept { this->sum += v; });
         }
     };
-    template <sq::sequence_sender Sndr>
-    test_sender(Sndr&&, int&) -> test_sender<Sndr>;
 
-    static_assert(ex::sender<test_sender<decltype(ex::just(17))>>);
-    static_assert(ex::sender_in<test_sender<decltype(ex::just(17))>>);
-    static_assert(sq::sequence_sender<test_sender<decltype(ex::just(17))>>);
-}
+    std::remove_cvref_t<Sndr> sndr;
+    int&                      sum;
+    template <ex::receiver Rcvr>
+    auto sequence_connect(Rcvr&& rcvr) && {
+        return sq::sequence_connect(std::move(sndr), receiver<Rcvr>(std::forward<Rcvr>(rcvr), this->sum));
+    }
+};
+template <sq::sequence_sender Sndr>
+test_sender(Sndr&&, int&) -> test_sender<Sndr>;
+
+static_assert(ex::sender<test_sender<decltype(ex::just(17))>>);
+static_assert(ex::sender_in<test_sender<decltype(ex::just(17))>>);
+static_assert(sq::sequence_sender<test_sender<decltype(ex::just(17))>>);
+} // namespace
 
 int main() {
     auto sndr = sq::iota(1, 7);

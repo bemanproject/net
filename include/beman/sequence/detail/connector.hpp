@@ -10,20 +10,16 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::sequence::detail {
-    template <::beman::execution::sender Sndr, ::beman::execution::receiver Rcvr>
-    struct connector {
-        using state_t = ::beman::execution::connect_result_t<Sndr, Rcvr>;
-        state_t st;
-        connector(Sndr&& sndr, Rcvr&& rcvr) noexcept
-            : st(::beman::execution::connect(::std::forward<Sndr>(sndr), ::std::forward<Rcvr>(rcvr)))
-        {
-        }
-        
-        void start() & noexcept {
-            ::beman::execution::start(this->st);
-        }
-    };
-}
+template <::beman::execution::sender Sndr, ::beman::execution::receiver Rcvr>
+struct connector {
+    using state_t = ::beman::execution::connect_result_t<Sndr, Rcvr>;
+    state_t st;
+    connector(Sndr&& sndr, Rcvr&& rcvr) noexcept
+        : st(::beman::execution::connect(::std::forward<Sndr>(sndr), ::std::forward<Rcvr>(rcvr))) {}
+
+    void start() & noexcept { ::beman::execution::start(this->st); }
+};
+} // namespace beman::sequence::detail
 
 // ----------------------------------------------------------------------------
 

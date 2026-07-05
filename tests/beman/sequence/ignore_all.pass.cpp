@@ -4,11 +4,13 @@
 #include <beman/sequence/detail/ignore_all.hpp>
 #include <beman/sequence/detail/connector.hpp>
 #include <beman/sequence/detail/set_next.hpp>
+#include <beman/sequence/detail/sequence_connect.hpp>
+#include <beman/sequence/detail/sequence_receiver.hpp>
 #include <beman/sequence/detail/sequence_sender.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>
 #if defined(NDBUG)
-#   undef NDEBUG
+#undef NDEBUG
 #endif
 #include <cassert>
 
@@ -18,57 +20,56 @@ namespace sq = beman::sequence;
 // ----------------------------------------------------------------------------
 
 namespace {
-    template <::beman::execution::receiver Rcvr>
-    struct state {
-        using operation_state_concept = ::beman::execution::operation_state_tag;
-        using rcvr_t = ::std::remove_cvref_t<Rcvr>;
+template <::beman::execution::receiver Rcvr>
+struct state {
+    using operation_state_concept = ::beman::execution::operation_state_tag;
+    using rcvr_t                  = ::std::remove_cvref_t<Rcvr>;
 
-        rcvr_t rcvr;
-        bool& started;
-        bool& done;
+    rcvr_t rcvr;
+    bool&  started;
+    bool&  done;
 
-        struct receiver {
-            using receiver_concept = ::beman::execution::receiver_tag;
-            state* st;
+    struct receiver {
+        using receiver_concept = ::beman::sequence::sequence_receiver_tag;
+        state* st;
 
-            void set_value() && noexcept {
-                this->st->done = true;
-                ::beman::execution::set_value(::std::move(this->st->rcvr));
-            }
-            auto set_next(::beman::execution::sender auto&&) & noexcept {
-                return ::beman::sequence::set_next(this->st->rcvr, ::beman::execution::just());
-            }
-        };
-        using sndr_t = decltype(::beman::sequence::set_next(::std::declval<receiver&>(), ::beman::execution::just()));
-
-        ::std::optional<sq::detail::connector<sndr_t, receiver>> inner_state;
-
-        void start() & noexcept {
-            this->started = true;
-            inner_state.emplace(::beman::sequence::set_next(this->rcvr, ::beman::execution::just()), receiver{this});
-            ::beman::execution::start(inner_state->st);
+        void set_value() && noexcept {
+            this->st->done = true;
+            ::beman::execution::set_value(::std::move(this->st->rcvr));
+        }
+        auto set_next(::beman::execution::sender auto&&) & noexcept {
+            return ::beman::sequence::set_next(this->st->rcvr, ::beman::execution::just());
         }
     };
-    struct sender {
-        using sender_concept = ::beman::sequence::sequence_sender_tag;
-        template <typename, typename...>
-        static consteval auto get_completion_signatures() noexcept {
-            return ::beman::execution::completion_signatures<::beman::execution::set_value_t()>();
-        }
+    using sndr_t = decltype(::beman::sequence::set_next(::std::declval<receiver&>(), ::beman::execution::just()));
 
-        bool& started;
-        bool& done;
+    ::std::optional<sq::detail::connector<sndr_t, receiver>> inner_state;
 
-        template <::beman::execution::receiver Rcvr>
-        auto connect(Rcvr&& rcvr) const& noexcept {
-            std::cout << "ignore_all.pass.cpp: connect() called\n";
-            return state<Rcvr>{::std::forward<Rcvr>(rcvr), this->started, this->done};
-        }
-    };
+    void start() & noexcept {
+        this->started = true;
+        inner_state.emplace(::beman::sequence::set_next(this->rcvr, ::beman::execution::just()), receiver{this});
+        ::beman::execution::start(inner_state->st);
+    }
+};
+struct sender {
+    using sender_concept = ::beman::sequence::sequence_sender_tag;
+    template <typename, typename...>
+    static consteval auto get_completion_signatures() noexcept {
+        return ::beman::execution::completion_signatures<::beman::execution::set_value_t()>();
+    }
 
-    static_assert(ex::sender<sender>);
-    static_assert(sq::sequence_sender<sender>);
-}
+    bool& started;
+    bool& done;
+
+    template <::beman::sequence::sequence_receiver Rcvr>
+    auto sequence_connect(Rcvr&& rcvr) const& noexcept {
+        return state<Rcvr>{::std::forward<Rcvr>(rcvr), this->started, this->done};
+    }
+};
+
+static_assert(ex::sender<sender>);
+static_assert(sq::sequence_sender<sender>);
+} // namespace
 
 int main() {
     bool started{false};

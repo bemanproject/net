@@ -12,19 +12,19 @@ namespace sq = beman::sequence;
 // ----------------------------------------------------------------------------
 
 namespace {
-    struct receiver {
-        using receiver_concept = ex::receiver_tag;
-        bool& done;
-        auto set_next(ex::sender auto sndr) noexcept {
-            this->done = true;
-            return std::move(sndr);
-        }
-    };
-    static_assert(ex::receiver<receiver>);
-}
+struct receiver {
+    using receiver_concept = ex::receiver_tag;
+    bool& done;
+    auto  set_next(ex::sender auto sndr) noexcept {
+        this->done = true;
+        return std::move(sndr);
+    }
+};
+static_assert(ex::receiver<receiver>);
+} // namespace
 
 int main() {
-    bool done = false;
+    bool     done = false;
     receiver r{done};
     assert(not done);
     [[maybe_unused]] ex::sender auto sndr = sq::set_next(r, ex::just());

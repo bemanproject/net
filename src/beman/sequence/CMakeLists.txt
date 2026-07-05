@@ -23,6 +23,9 @@ target_sources(
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/connector.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/ignore_all.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/iota.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/sequence_connect.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/sequence_connect_result_t.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/sequence_receiver.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/sequence_sender.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/detail/set_next.hpp
 )
