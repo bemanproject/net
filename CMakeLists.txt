@@ -41,6 +41,7 @@ set(POSTGRESROOT /Library/PostgreSQL/18)
 check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
 
 add_subdirectory(src/beman/net)
+add_library(beman::net ALIAS beman.net)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
