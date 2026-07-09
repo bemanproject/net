@@ -27,6 +27,14 @@ endif()
 
 include(FetchContent)
 
+# Use execution with MSVC product_type fix (f131d69) until task updates 7df0f75.
+FetchContent_Declare(
+    execution
+    GIT_REPOSITORY https://github.com/bemanproject/execution
+    GIT_TAG f131d69
+    SYSTEM
+)
+
 FetchContent_Declare(
     task
     #SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
