@@ -25,27 +25,11 @@ if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
 endif()
 
-include(FetchContent)
+# Match CMake presets. MSVC CI enables modules via Ninja by default, which
+# triggers execution C7760 in product_type.cppm (pre-existing on main).
+set(BEMAN_USE_MODULES OFF CACHE BOOL "Build CXX modules" FORCE)
 
-# MSVC C7760 workaround for execution 7df0f75 (pre-existing on main).
-# Upstream fix: bemanproject/execution@f131d69. Remove when task updates.
-FetchContent_Declare(
-    execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 7df0f75
-    SYSTEM
-    FIND_PACKAGE_ARGS
-        0.2.0
-        EXACT
-        NAMES
-        beman.execution
-        COMPONENTS
-        execution_headers
-    PATCH_COMMAND
-        ${CMAKE_COMMAND}
-        -DFILE=<SOURCE_DIR>/src/beman/execution/product_type.cppm -P
-        ${CMAKE_CURRENT_SOURCE_DIR}/infra/cmake/patch-execution-msvc-product-type.cmake
-)
+include(FetchContent)
 
 FetchContent_Declare(
     task
