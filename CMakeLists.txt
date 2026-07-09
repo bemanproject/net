@@ -27,14 +27,6 @@ endif()
 
 include(FetchContent)
 
-# Use execution with MSVC product_type fix (f131d69) until task updates 7df0f75.
-FetchContent_Declare(
-    execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG f131d69
-    SYSTEM
-)
-
 FetchContent_Declare(
     task
     #SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
@@ -43,6 +35,46 @@ FetchContent_Declare(
     FIND_PACKAGE_ARGS 0.2.0 EXACT NAMES beman.task COMPONENTS task_headers
 )
 FetchContent_MakeAvailable(task)
+
+# MSVC C7760 workaround for execution 7df0f75 (pre-existing on main).
+# Upstream fix: bemanproject/execution@f131d69. Remove when task updates.
+FetchContent_GetProperties(
+    execution
+    POPULATED _beman_execution_populated
+    SOURCE_DIR _beman_execution_source_dir
+)
+if(_beman_execution_populated)
+    set(_beman_execution_product_type_cppm
+        "${_beman_execution_source_dir}/src/beman/execution/product_type.cppm"
+    )
+    if(EXISTS "${_beman_execution_product_type_cppm}")
+        file(READ "${_beman_execution_product_type_cppm}" _beman_execution_product_type_content)
+        if(_beman_execution_product_type_content MATCHES "export template <typename... T>")
+            string(
+                REPLACE
+                "#ifdef _MSC_VER"
+                "#if defined(_MSC_VER) && _MSC_VER <= 1944L"
+                _beman_execution_product_type_content
+                "${_beman_execution_product_type_content}"
+            )
+            string(
+                REPLACE
+                "export template <typename... T>"
+                "template <typename... T>"
+                _beman_execution_product_type_content
+                "${_beman_execution_product_type_content}"
+            )
+            string(
+                REPLACE
+                "export template <::std::size_t I, typename... T>"
+                "template <::std::size_t I, typename... T>"
+                _beman_execution_product_type_content
+                "${_beman_execution_product_type_content}"
+            )
+            file(WRITE "${_beman_execution_product_type_cppm}" "${_beman_execution_product_type_content}")
+        endif()
+    endif()
+endif()
 
 include(CheckLibraryExists)
 set(POSTGRESROOT /Library/PostgreSQL/18)
