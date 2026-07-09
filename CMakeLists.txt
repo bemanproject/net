@@ -48,30 +48,37 @@ if(_beman_execution_populated)
         "${_beman_execution_source_dir}/src/beman/execution/product_type.cppm"
     )
     if(EXISTS "${_beman_execution_product_type_cppm}")
-        file(READ "${_beman_execution_product_type_cppm}" _beman_execution_product_type_content)
-        if(_beman_execution_product_type_content MATCHES "export template <typename... T>")
+        file(
+            READ "${_beman_execution_product_type_cppm}"
+            _beman_execution_product_type_content
+        )
+        if(
+            _beman_execution_product_type_content
+                MATCHES
+                "export template <typename... T>"
+        )
             string(
-                REPLACE
-                "#ifdef _MSC_VER"
+                REPLACE "#ifdef _MSC_VER"
                 "#if defined(_MSC_VER) && _MSC_VER <= 1944L"
                 _beman_execution_product_type_content
                 "${_beman_execution_product_type_content}"
             )
             string(
-                REPLACE
-                "export template <typename... T>"
+                REPLACE "export template <typename... T>"
                 "template <typename... T>"
                 _beman_execution_product_type_content
                 "${_beman_execution_product_type_content}"
             )
             string(
-                REPLACE
-                "export template <::std::size_t I, typename... T>"
+                REPLACE "export template <::std::size_t I, typename... T>"
                 "template <::std::size_t I, typename... T>"
                 _beman_execution_product_type_content
                 "${_beman_execution_product_type_content}"
             )
-            file(WRITE "${_beman_execution_product_type_cppm}" "${_beman_execution_product_type_content}")
+            file(
+                WRITE "${_beman_execution_product_type_cppm}"
+                "${_beman_execution_product_type_content}"
+            )
         endif()
     endif()
 endif()
