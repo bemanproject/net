@@ -19,6 +19,14 @@ repos:
         files: ^.*\.(cmake|cpp|cppm|hpp|txt|md|mds|json|js|in|yaml|yml|py|toml)$
         args: ["--write", "--ignore-words", ".codespellignore" ]
 
+
+  # Beman Standard checking via beman-tidy
+  - repo: https://github.com/bemanproject/beman-tidy
+    rev: v0.5.2
+    hooks:
+      - id: beman-tidy
+        args: [".", "--verbose"]
+
   # Clang-format for C++
   # This brings in a portable version of clang-format.
   # See also: https://github.com/ssciwr/clang-format-wheel
