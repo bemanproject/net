@@ -25,6 +25,10 @@ if(LINUX)
     option(BEMAN_NET_WITH_URING "Enable liburing io context" OFF)
 endif()
 
+# Match CMake presets. MSVC CI enables modules via Ninja by default, which
+# triggers execution C7760 in product_type.cppm (pre-existing on main).
+set(BEMAN_USE_MODULES OFF CACHE BOOL "Build CXX modules" FORCE)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -41,6 +45,7 @@ set(POSTGRESROOT /Library/PostgreSQL/18)
 check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
 
 add_subdirectory(src/beman/net)
+add_library(beman::net ALIAS beman.net)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
