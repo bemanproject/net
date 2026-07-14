@@ -15,6 +15,7 @@ target_sources(
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
                 ${PROJECT_SOURCE_DIR}/include/beman/net/net.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/net.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net29/net.hpp
     PUBLIC
         FILE_SET detail_headers

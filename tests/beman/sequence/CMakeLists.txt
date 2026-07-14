@@ -12,6 +12,7 @@ list(APPEND tests
     sequence_receiver.pass
     sequence_sender.pass
     set_next.pass
+    then_each.pass
 )
 
 foreach(test ${tests})

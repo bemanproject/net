@@ -10,6 +10,7 @@
 #include <beman/sequence/detail/iota.hpp>
 #include <beman/sequence/detail/set_next.hpp>
 #include <beman/sequence/detail/sequence_sender.hpp>
+#include <beman/sequence/detail/then_each.hpp>
 
 // ----------------------------------------------------------------------------
 

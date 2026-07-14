@@ -15,6 +15,7 @@ target_sources(
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
                 ${PROJECT_SOURCE_DIR}/include/beman/sequence/sequence.hpp
+                ${PROJECT_SOURCE_DIR}/include/beman/sequence.hpp
     PUBLIC
         FILE_SET detail_headers
             TYPE HEADERS
