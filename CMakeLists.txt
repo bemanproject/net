@@ -17,7 +17,7 @@ option(
 # [CMAKE.SKIP_EXAMPLES]
 option(
     BEMAN_NET_BUILD_EXAMPLES
-    "Enable building examples. Default: ON. Values: { ON, OFF }."
+    "Enable building examples. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
 
@@ -61,7 +61,7 @@ if(BEMAN_NET_BUILD_TESTS)
     add_subdirectory(tests/beman/net)
 endif()
 
-if(${BEMAN_NET_BUILD_EXAMPLES})
+if(BEMAN_NET_BUILD_EXAMPLES)
     message(NOTICE "Building examples")
     add_subdirectory(examples)
 endif()
