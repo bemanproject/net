@@ -6,7 +6,6 @@
 add_library(${PROJECT_NAME}_headers INTERFACE)
 add_library(beman::net_headers ALIAS ${PROJECT_NAME}_headers)
 
-add_library(beman.net INTERFACE)
 target_link_libraries(beman.net INTERFACE ${PROJECT_NAME}_headers)
 
 target_sources(

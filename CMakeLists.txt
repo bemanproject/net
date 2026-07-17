@@ -35,7 +35,7 @@ FetchContent_Declare(
     task
     #SOURCE_DIR ${CMAKE_SOURCE_DIR}/../task
     GIT_REPOSITORY https://github.com/bemanproject/task
-    GIT_TAG 1679185
+    GIT_TAG 7177dab
     FIND_PACKAGE_ARGS 0.2.0 EXACT NAMES beman.task COMPONENTS task_headers
 )
 FetchContent_MakeAvailable(task)
@@ -44,8 +44,9 @@ include(CheckLibraryExists)
 set(POSTGRESROOT /Library/PostgreSQL/18)
 check_library_exists(pq PQsocket ${POSTGRESROOT}/lib HAS_POSTGRES)
 
-add_subdirectory(src/beman/net)
+add_library(beman.net INTERFACE)
 add_library(beman::net ALIAS beman.net)
+add_subdirectory(src/beman/net)
 
 #===============================================================================
 # NOTE: this must be done before tests! CK
