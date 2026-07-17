@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
@@ -37,5 +38,12 @@ repos:
       - id: gersemi
         name: CMake linting
         exclude: ^.*/tests/.*/data/ # Exclude test data directories
+
+  # Beman Standard checking via beman-tidy
+  - repo: https://github.com/bemanproject/beman-tidy
+    rev: v0.5.2
+    hooks:
+      - id: beman-tidy
+        args: [".", "--verbose"]
 
 exclude: 'infra/'

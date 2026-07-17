@@ -1,10 +1,10 @@
 # beman.net: Senders For Network Operations
 
-<img src="https://github.com/bemanproject/beman/blob/main/images/logos/beman_logo-beman_library_under_development.png" style="width:5%; height:auto;">
-
-![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
-![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+<!-- markdownlint-disable line-length -->
+[![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#the-beman-library-maturity-model)
+![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
 [![Coverage](https://coveralls.io/repos/github/bemanproject/net/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/net?branch=main)
+<!-- markdownlint-restore -->
 
 `beman.net` provides senders for asynchronous network operations.
 It is based on [P2762R2](https://wg21.link/P2762R2). Both the proposal
@@ -21,7 +21,11 @@ possible use various libraries for asynchronous operations like
 
 **Implements**: [Sender/Receiver Interface for Networking (P2762)](https://wg21.link/P2762)
 
-**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/BEMAN_LIBRARY_MATURITY_MODEL.md#under-development-and-not-yet-ready-for-production-use)
+**Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
+
+## License
+
+beman.net is licensed under the Apache License v2.0 with LLVM Exceptions.
 
 ## Help Welcome!
 
@@ -45,6 +49,22 @@ interface will be different. However, even if the public interface
 is using [IETF TAPS](https://datatracker.ietf.org/wg/taps/documents/)
 the implementation will use a lower-level interface which can likely
 use something akin to the current interface.
+
+## Dependencies
+
+### Build Environment
+
+This project requires at least the following to build:
+
+* A C++ compiler that conforms to the C++23 standard or greater
+* CMake 3.30 or later
+* (Test Only) GoogleTest
+
+You can disable building tests by setting CMake option `BEMAN_NET_BUILD_TESTS` to
+`OFF` when configuring the project.
+
+You can disable building examples by setting CMake option `BEMAN_NET_BUILD_EXAMPLES` to
+`OFF` when configuring the project.
 
 ## Building
 
