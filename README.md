@@ -50,6 +50,22 @@ is using [IETF TAPS](https://datatracker.ietf.org/wg/taps/documents/)
 the implementation will use a lower-level interface which can likely
 use something akin to the current interface.
 
+## Dependencies
+
+### Build Environment
+
+This project requires at least the following to build:
+
+* A C++ compiler that conforms to the C++23 standard or greater
+* CMake 3.30 or later
+* (Test Only) GoogleTest
+
+You can disable building tests by setting CMake option `BEMAN_NET_BUILD_TESTS` to
+`OFF` when configuring the project.
+
+You can disable building examples by setting CMake option `BEMAN_NET_BUILD_EXAMPLES` to
+`OFF` when configuring the project.
+
 ## Building
 
 Currently, the interfaces are entirely implemented in headers, i.e.,
