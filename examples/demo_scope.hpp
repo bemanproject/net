@@ -4,7 +4,7 @@
 #ifndef INCLUDED_EXAMPLES_DEMO_SCOPE
 #define INCLUDED_EXAMPLES_DEMO_SCOPE
 
-#include <beman/net/net.hpp>
+#include <beman/net.hpp>
 #include <atomic>
 #include <iostream>
 #include <utility>

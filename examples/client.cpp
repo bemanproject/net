@@ -1,7 +1,7 @@
 // examples/client.cpp                                                -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/net/net.hpp>
+#include <beman/net.hpp>
 #include <functional>
 #include <iostream>
 #include <memory>

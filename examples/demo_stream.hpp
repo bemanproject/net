@@ -4,8 +4,8 @@
 #ifndef INCLUDED_EXAMPLES_DEMO_STREAM
 #define INCLUDED_EXAMPLES_DEMO_STREAM
 
-#include <beman/execution/execution.hpp>
-#include <beman/net/net.hpp>
+#include <beman/execution.hpp>
+#include <beman/net.hpp>
 #include <beman/net/detail/repeat_effect_until.hpp>
 #include <algorithm>
 #include <functional>

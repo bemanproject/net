@@ -23,4 +23,6 @@ using ::beman::net::resume_at;
 
 } // namespace beman::net29
 
+namespace beman::net {}
+
 #endif

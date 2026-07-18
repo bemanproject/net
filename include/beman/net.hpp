@@ -5,5 +5,6 @@
 #define INCLUDED_INCLUDE_BEMAN_NET
 
 #include <beman/net/net.hpp>
+namespace beman::net {}
 
 #endif

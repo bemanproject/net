@@ -1,8 +1,8 @@
 // examples/taps.cpp                                                  -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/execution/execution.hpp>
-#include <beman/net/net.hpp>
+#include <beman/execution.hpp>
+#include <beman/net.hpp>
 #include <iostream>
 #include <system_error>
 #include <string>
