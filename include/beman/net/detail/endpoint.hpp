@@ -8,6 +8,8 @@
 #include <cstring>
 #include <beman/net/detail/platform.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

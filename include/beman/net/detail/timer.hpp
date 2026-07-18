@@ -10,6 +10,8 @@
 #include <beman/net/detail/sender.hpp>
 #include <beman/net/detail/event_type.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

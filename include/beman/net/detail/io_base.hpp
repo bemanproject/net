@@ -10,6 +10,8 @@
 #include <system_error>
 #include <ostream>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

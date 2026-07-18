@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
