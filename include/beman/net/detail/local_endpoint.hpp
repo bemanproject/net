@@ -6,6 +6,8 @@
 
 #include <string>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

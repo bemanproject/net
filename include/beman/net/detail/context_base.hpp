@@ -11,6 +11,8 @@
 #include <optional>
 #include <system_error>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

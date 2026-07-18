@@ -1,8 +1,8 @@
-// examples/http-server.cpp                                           -*-C++-*-
+// examples/http_server.cpp                                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/net/net.hpp>
-#include <beman/execution/execution.hpp>
+#include <beman/net.hpp>
+#include <beman/execution.hpp>
 #include "demo_algorithm.hpp"
 #include "demo_scope.hpp"
 #include "demo_task.hpp"

@@ -4,6 +4,8 @@
 #ifndef INCLUDED_BEMAN_NET_DETAIL_PLATFORM
 #define INCLUDED_BEMAN_NET_DETAIL_PLATFORM
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 // Platform abstraction for networking primitives.
 // On Windows: provides WinSock2 headers and POSIX compatibility types.

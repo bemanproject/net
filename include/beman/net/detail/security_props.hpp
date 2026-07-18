@@ -4,6 +4,8 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_NET_DETAIL_SECURITY_PROPS
 #define INCLUDED_INCLUDE_BEMAN_NET_DETAIL_SECURITY_PROPS
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

@@ -7,6 +7,8 @@
 #include <functional>
 #include <type_traits>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

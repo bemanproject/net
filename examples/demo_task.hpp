@@ -4,7 +4,7 @@
 #ifndef INCLUDED_EXAMPLES_DEMO_TASK
 #define INCLUDED_EXAMPLES_DEMO_TASK
 
-#include <beman/net/net.hpp>
+#include <beman/net.hpp>
 #include <exception>
 #include <coroutine>
 #include <memory>

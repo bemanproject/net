@@ -4,6 +4,8 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_NET_DETAIL_TRANSPORT_PREFERENCE
 #define INCLUDED_INCLUDE_BEMAN_NET_DETAIL_TRANSPORT_PREFERENCE
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

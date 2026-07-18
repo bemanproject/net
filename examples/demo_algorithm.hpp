@@ -16,7 +16,7 @@
 #pragma clang diagnostic ignored "-Wmissing-braces"
 #endif
 
-#include <beman/net/net.hpp>
+#include <beman/net.hpp>
 #include <atomic>
 #include <optional>
 #include <tuple>

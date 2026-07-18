@@ -44,6 +44,6 @@ repos:
     rev: v0.5.2
     hooks:
       - id: beman-tidy
-        args: [".", "--verbose"]
+        args: [".", "--verbose", "--require-all"]
 
 exclude: 'infra/'

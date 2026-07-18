@@ -12,6 +12,8 @@
 #include <functional>
 #include <system_error>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 template <typename Protocol>

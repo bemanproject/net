@@ -12,6 +12,8 @@
 #include <beman/net/detail/scope.hpp>
 #include <system_error>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

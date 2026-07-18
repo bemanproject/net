@@ -22,20 +22,20 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 set(EXAMPLES
-    http-warwick
+    http_warwick
     client
-    cppcon-2024
+    cppcon_2024
     empty
-    http-server
+    http_server
     milano
-    http-munich
+    http_munich
     server
-    taps
+    #-dk:FIXME taps
     task
 )
 
 if(${HAS_POSTGRES})
-    list(APPEND EXAMPLES postgres postgres-talk populate-postgres)
+    list(APPEND xEXAMPLES postgres postgres_talk populate_postgres)
 endif()
 
 foreach(EXAMPLE ${EXAMPLES})
