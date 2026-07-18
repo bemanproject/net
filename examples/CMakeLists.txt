@@ -35,7 +35,7 @@ set(EXAMPLES
 )
 
 if(${HAS_POSTGRES})
-    list(APPEND EXAMPLES postgres postgres-talk populate-postgres)
+    list(APPEND xEXAMPLES postgres postgres-talk populate-postgres)
 endif()
 
 foreach(EXAMPLE ${EXAMPLES})
