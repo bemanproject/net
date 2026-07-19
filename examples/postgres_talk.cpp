@@ -110,7 +110,7 @@ struct mutex {
     struct state : state_base {
         using operation_state_concept = ex::operation_state_tag;
         std::remove_cvref_t<Rcvr> rcvr;
-        mutex*                    mut;
+        mutex*                    mt;
 
         struct receiver {
             using receiver_concept = ex::receiver_tag;
@@ -136,19 +136,19 @@ struct mutex {
 
         inner_state_t inner_state;
         state(Rcvr&& r, Fun f, mutex* m)
-            : rcvr(std::forward<Rcvr>(r)), mut(m), inner_state(ex::connect(std::move(f)(mut->obj), receiver{this})) {}
+            : rcvr(std::forward<Rcvr>(r)), mt(m), inner_state(ex::connect(std::move(f)(mt->obj), receiver{this})) {}
         void start() noexcept {
-            if (!std::exchange(this->mut->is_busy, true)) {
+            if (!std::exchange(this->mt->is_busy, true)) {
                 run();
             } else {
-                this->next = std::exchange(mut->waiting, this);
+                this->next = std::exchange(mt->waiting, this);
             }
         }
         void complete() {
-            if (mut->waiting) {
-                std::exchange(mut->waiting, mut->waiting->next)->run();
+            if (mt->waiting) {
+                std::exchange(mt->waiting, mt->waiting->next)->run();
             } else {
-                mut->is_busy = false;
+                mt->is_busy = false;
             }
         }
         void run() { ex::start(inner_state); }
@@ -163,11 +163,11 @@ struct mutex {
         }
 
         Fun    fun;
-        mutex* mut;
+        mutex* mt;
 
         template <ex::receiver Rcvr>
         auto connect(Rcvr&& r) && {
-            return state<Rcvr, Fun>(std::forward<Rcvr>(r), std::move(fun), mut);
+            return state<Rcvr, Fun>(std::forward<Rcvr>(r), std::move(fun), mt);
         }
     };
 
