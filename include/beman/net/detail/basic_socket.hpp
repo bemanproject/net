@@ -11,6 +11,8 @@
 #include <beman/net/detail/io_context_scheduler.hpp>
 #include <beman/net/detail/internet.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 template <typename Protocol>

@@ -6,6 +6,8 @@
 
 #include <beman/net/detail/transport_preference.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

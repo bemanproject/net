@@ -5,6 +5,9 @@
 #define INCLUDED_INCLUDE_BEMAN_NET29_NET
 
 #include <beman/net/net.hpp>
+
+namespace beman::net {}
+
 namespace beman::net29::detail {
 namespace ex = beman::net::detail::ex;
 }

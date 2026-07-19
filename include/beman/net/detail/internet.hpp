@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include <string>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::ip {

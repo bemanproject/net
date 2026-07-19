@@ -13,6 +13,8 @@
 #include <tuple>
 #include <liburing.h>
 
+namespace beman::net {}
+
 namespace beman::net::detail {
 
 // io_context implementation based on liburing

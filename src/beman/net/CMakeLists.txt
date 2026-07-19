@@ -6,6 +6,8 @@
 add_library(${PROJECT_NAME}_headers INTERFACE)
 add_library(beman::net_headers ALIAS ${PROJECT_NAME}_headers)
 
+target_link_libraries(beman.net INTERFACE ${PROJECT_NAME}_headers)
+
 target_sources(
     ${PROJECT_NAME}_headers
     # XXX PRIVATE net.cpp
@@ -14,6 +16,7 @@ target_sources(
             TYPE HEADERS
             BASE_DIRS ${PROJECT_SOURCE_DIR}/include
             FILES
+                ${PROJECT_SOURCE_DIR}/include/beman/net.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net/net.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net.hpp
                 ${PROJECT_SOURCE_DIR}/include/beman/net29/net.hpp

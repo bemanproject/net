@@ -9,6 +9,8 @@
 #include <beman/net/detail/netfwd.hpp>
 #include <beman/net/detail/platform.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 class beman::net::socket_base {
