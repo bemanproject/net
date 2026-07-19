@@ -163,7 +163,7 @@ struct result {
 };
 
 using results = std::vector<result>;
-auto print_results([](const results& res) noexcept { std::ranges::for_each(res, print_result); });
+[[maybe_unused]] auto print_results([](const results& res) noexcept { std::ranges::for_each(res, print_result); });
 
 auto wait_for_input(pg::connection& conn) {
     return net::repeat_effect_until(net::async_poll(conn.socket, net::event_type::in) |
@@ -219,7 +219,7 @@ auto main() -> int {
     net::io_context           io;
     pg::limit<pg::connection> conn(io, PQconnectdb(connection_string.c_str()));
     ex::counting_scope        scope;
-    auto                      spawn{
+    [[maybe_unused]] auto                      spawn{
         [&](ex::sender auto s) { ex::spawn(ex::starts_on(io.get_scheduler(), std::move(s)), scope.get_token()); }};
 
 #if 0
@@ -245,27 +245,33 @@ auto main() -> int {
         }
     }()};
 
-    auto request1{conn(pg::exec(query.c_str())) | ex::then(pg::print_results) |
+    [[maybe_unused]] auto request1{conn(pg::exec(query.c_str())) | ex::then(pg::print_results) |
                   ex::upon_error([](pg::error e) noexcept { std::cout << "database error=" << e << "\n"; })};
-    auto request2{conn(pg::exec(query2.c_str())) | ex::then(pg::print_results) |
+    [[maybe_unused]] auto request2{conn(pg::exec(query2.c_str())) | ex::then(pg::print_results) |
                   ex::upon_error([](pg::error e) noexcept { std::cout << "database error=" << e << "\n"; })};
 
-    if constexpr (false) {
+    if constexpr (true) {
         spawn(std::move(timer));
+#if 0
         spawn(std::move(request1) | ex::then([&scope] noexcept { scope.request_stop(); }));
         ex::sync_wait(ex::when_all(io.async_run(), scope.join()));
+#endif
     } else if constexpr (false) {
+#if 0
         ex::inplace_stop_source source;
         ex::sync_wait(ex::when_all(
             io.async_run(),
             ex::starts_on(io.get_scheduler(),
                           ex::write_env(std::move(timer), ex::env{ex::prop{ex::get_stop_token, source.get_token()}})),
             std::move(request1) | ex::then([&source] noexcept { source.request_stop(); })));
+#endif
     } else {
+#if 0
         ex::sync_wait(
             demo::when_any(io.async_run(),
                            // std::move(request1) | ex::let_value([&request2]{ return std::move(request2); }),
                            ex::when_all(std::move(request1), std::move(request2)),
                            ex::starts_on(io.get_scheduler(), std::move(timer))));
+#endif
     }
 }
