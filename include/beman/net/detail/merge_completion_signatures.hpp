@@ -4,6 +4,8 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_NET_DETAIL_MERGE_COMPLETION_SIGNATURES
 #define INCLUDED_INCLUDE_BEMAN_NET_DETAIL_MERGE_COMPLETION_SIGNATURES
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

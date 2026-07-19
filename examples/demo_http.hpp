@@ -4,9 +4,9 @@
 #ifndef INCLUDED_EXAMPLES_DEMO_HTTP
 #define INCLUDED_EXAMPLES_DEMO_HTTP
 
-#include <beman/execution/execution.hpp>
-#include <beman/execution/task.hpp>
-#include <beman/net/net.hpp>
+#include <beman/execution.hpp>
+#include <beman/task.hpp>
+#include <beman/net.hpp>
 #include "demo_stream.hpp"
 #include <algorithm>
 #include <array>

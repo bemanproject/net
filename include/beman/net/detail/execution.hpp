@@ -6,6 +6,8 @@
 
 #include <beman/execution/execution.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail::ex::detail {

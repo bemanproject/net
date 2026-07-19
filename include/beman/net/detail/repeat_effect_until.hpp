@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
@@ -92,12 +94,14 @@ struct repeat_effect_until_t : beman::execution::sender_adaptor_closure<repeat_e
     struct sender {
         using sender_concept        = beman::execution::sender_tag;
         using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
+        template <typename... E>
+        using make_error_completions = beman::execution::completion_signatures<beman::execution::set_error_t(E)...>;
         template <typename, typename... Env>
         static consteval auto get_completion_signatures() {
             return net::detail::merge_completion_signatures<
                 completion_signatures,
-                ex::error_types_of_t<Body, ex::env<>, ex::completion_signatures>,
-                ex::error_types_of_t<Upstream, ex::env<>, ex::completion_signatures>,
+                ex::error_types_of_t<Body, ex::env<>, make_error_completions>,
+                ex::error_types_of_t<Upstream, ex::env<>, make_error_completions>,
                 std::conditional_t<ex::sends_stopped<Body> || ex::sends_stopped<Upstream>,
                                    ex::completion_signatures<ex::set_stopped_t()>,
                                    ex::completion_signatures<>>,

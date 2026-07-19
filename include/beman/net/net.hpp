@@ -35,7 +35,7 @@
 
 #include <beman/net/detail/scope.hpp>
 #include <beman/net/detail/task.hpp>
-#include <beman/net/detail/initiate.hpp>
+//-dk:FIXME #include <beman/net/detail/initiate.hpp>
 #include <beman/net/detail/into_expected.hpp>
 #include <beman/net/detail/repeat_effect_until.hpp>
 #include <beman/net/detail/listen.hpp>
@@ -44,6 +44,8 @@
 #include <beman/net/detail/remote_endpoint.hpp>
 #include <beman/net/detail/rendezvous.hpp>
 #include <beman/net/detail/transport_preference.hpp>
+
+namespace beman::net {}
 
 // ----------------------------------------------------------------------------
 

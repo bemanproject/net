@@ -4,8 +4,8 @@
 #include <iostream>
 #include <functional>
 #include <string_view>
-#include <beman/execution/execution.hpp>
-#include <beman/net/net.hpp>
+#include <beman/execution.hpp>
+#include <beman/net.hpp>
 #include "demo_algorithm.hpp"
 #include "demo_scope.hpp"
 #include "demo_task.hpp"

@@ -10,6 +10,8 @@
 #include <beman/net/detail/context_base.hpp>
 #include <cassert>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {

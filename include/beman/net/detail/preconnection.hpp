@@ -9,6 +9,8 @@
 #include <beman/net/detail/security_props.hpp>
 #include <beman/net/detail/transport_props.hpp>
 
+namespace beman::net {}
+
 // ----------------------------------------------------------------------------
 
 namespace beman::net::detail {
