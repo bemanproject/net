@@ -1,4 +1,4 @@
-// tests/beman/sequence/sequence_connect_result_t.pass.cpp            -*-C++-*-
+// tests/beman/sequence/sequence_connect_result_t.test.cpp            -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/sequence_connect_result_t.hpp>

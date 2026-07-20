@@ -4,15 +4,16 @@
 # cmake-format: on
 
 list(APPEND tests
-    connector.pass
-    ignore_all.pass
-    iota.pass
-    sequence_connect.pass
-    sequence_connect_result_t.pass
-    sequence_receiver.pass
-    sequence_sender.pass
-    set_next.pass
-    then_each.pass
+    connector.test
+    filter_each.test
+    ignore_all.test
+    iota.test
+    sequence_connect.test
+    sequence_connect_result_t.test
+    sequence_receiver.test
+    sequence_sender.test
+    set_next.test
+    then_each.test
 )
 
 foreach(test ${tests})

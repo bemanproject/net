@@ -1,4 +1,4 @@
-// tests/beman/sequence/sequence_receiver.pass.cpp                    -*-C++-*-
+// tests/beman/sequence/sequence_receiver.test.cpp                    -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/sequence_receiver.hpp>

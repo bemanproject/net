@@ -1,4 +1,4 @@
-// tests/beman/sequence/then_each.pass.cpp                            -*-C++-*-
+// tests/beman/sequence/then_each.test.cpp                            -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/then_each.hpp>

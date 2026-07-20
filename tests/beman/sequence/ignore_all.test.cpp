@@ -1,4 +1,4 @@
-// tests/beman/sequence/ignore_all.pass.cpp                           -*-C++-*-
+// tests/beman/sequence/ignore_all.test.cpp                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/ignore_all.hpp>

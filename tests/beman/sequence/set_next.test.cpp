@@ -1,4 +1,4 @@
-// tests/beman/sequence/set_next.pass.cpp                             -*-C++-*-
+// tests/beman/sequence/set_next.test.cpp                             -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/set_next.hpp>

@@ -1,4 +1,4 @@
-// tests/beman/sequence/iota.pass.cpp                                 -*-C++-*-
+// tests/beman/sequence/iota.test.cpp                                 -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/sequence/detail/iota.hpp>
